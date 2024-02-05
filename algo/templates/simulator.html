@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator</title>
+    <style>
+        table {
+            height: 80v;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td {
+            width: 25px;
+            height: 25px;
+        }
+    </style>
+    <script>
+        let obstacles = {{ obstacles | tojson | safe}};
+        function default_grid() {
+            let rows = [];
+            for (var i = 19; i >=0; i--) {
+                rows.push('<tr>');
+                rows.push('<td>' + i + '</td>');
+                for (var j = 0; j <= 19; j++) {
+                    rows.push('<td style="border: 1px solid black;"> </td>');
+                }
+                rows.push('</tr>');
+            }
+            rows.push('<tr>');
+            rows.push('<td></td>');
+            for(var k = 0; k<=19; k++){
+                rows.push('<td>' + k + '</td>');
+            }
+            rows.push('</tr>');
+            return rows;
+        }
+        function create_grid(){
+            // get default grid
+            rows = default_grid();
+            // populate the obstacles
+            for (let l = 0; l < obstacles.length; l++) {
+                let obstacle = obstacles[l];
+                let x = Number(obstacle.x);
+                let y = Number(obstacle.y);
+                let index =  (19-y)*23 + x + 2;
+                switch (obstacle.d) {
+                    case '0':
+                        rows[index] = '<td style="background-color: blue;border-top: 4px solid red;"></td>';
+                        break;
+                    case '2':
+                        rows[index] = '<td style="background-color: blue;border-right: 4px solid red;"></td>';
+                        break;
+                    case '4':
+                        rows[index] = '<td style="background-color: blue;border-bottom: 4px solid red;"></td>';
+                        break;
+                    case '6':
+                        rows[index] = '<td style="background-color: blue;border-left: 4px solid red;"></td>';
+                        break;
+                    case '8': 
+                        rows[index] = '<td style="background-color: blue;"></td>';
+                        break;
+                    default:
+                        rows[index] = '<td style="border: 1px solid black;"></td>';;
+                }       
+            }
+            return rows.join('');
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            // Call the default_grid function and set the generated HTML as innerHTML of the table-container
+            document.getElementById('table-container').innerHTML = '<table>' + create_grid() + '</table>';
+        });
+    </script>
+</head>
+<body>
+    <center><h1>Simulator</h1></center>
+    <div style="display:flex; flex-direction: row;"> 
+        
+        <!-- Displaying robot and obstacle details -->
+        <div style="display:flex;flex:1; flex-direction: column;align-content: center;">
+            <center>
+                <form action="{{ url_for('add_obstacle') }}" method="post">
+                    <label for="obstacle">Add obstacle:</label>
+                    <input type="number" id="x" name="x" required min="0" max="19" placeholder="x">
+                    <input type="number" id="y" name="y" required min="0" max="19" placeholder="y">
+                    <select type="number" id="direction" name="direction" required placeholder="direction">
+                            <option value="0">Up</option>
+                            <option value="2">Right</option>
+                            <option value="4">Down</option>
+                            <option value="6">Left</option>
+                            <option value="8">Skip</option>
+                    </select>
+                    <button type="submit">Add</button>
+                </form>
+                {% if obstacles|length > 0 %}
+                <h1>Obstacles:</h1>
+                <div style="flex:5;">
+                    {% for obstacle in obstacles %}
+                    
+                        <span class="badge">
+                            <div style="display:flex;flex-direction: row; align-items: flex-start;width: 200px;">
+                            <div style="flex:1;">x:{{ obstacle.x }}</div>
+                            <div style="flex:1;">y:{{ obstacle.y }}</div>
+                            <div style="flex:2;">direction:{{ obstacle.d }}</div>
+                            <a href="{{ url_for('delete_obstacle', obstacle_json=(obstacle|tojson)) }}"
+                            style="text-decoration: none; flex:1;">x</a>
+                        </div>
+                        </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </center>
+        </div>
+        <!-- Displaying Simulator Grids -->
+        <div style="display:flex;flex:2; flex-direction: column;  align-items: center;align-content: center;">
+            
+            <div id="table-container"></div>
+        </div>
+    </div>
+</body>
+</html>

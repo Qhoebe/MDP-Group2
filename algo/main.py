@@ -1,53 +1,35 @@
 import time
+import requests
+import json
 from algo import MazeSolver 
 from helper import command_generator
+from flask import Flask, request, jsonify, render_template,url_for,redirect
+from flask_cors import CORS
+from entities.Entity import Direction
 
-details = {
-    "robot_x": 1,
-    "robot_y": 1,
-    "robot_dir": 0,
-    "retrying": True,
-    "obstacles": [
-        {
-            "x": 12,
-            "y": 15,
-            "id": 1,
-            "d": 2
-        },
-        {
-            "x": 17,
-            "y": 9,
-            "id": 2,
-            "d": 0
-        },
-        {
-            "x": 7,
-            "y": 9,
-            "id": 3,
-            "d": 6
-        },
-        {
-            "x": 6,
-            "y": 15,
-            "id": 4,
-            "d": 0
-        },
-        {
-            "x": 8,
-            "y": 14,
-            "id": 5,
-            "d": 4
-        }
-    ]
-}
+app = Flask(__name__)
+CORS(app)
 
-def path_finding(details):
+
+@app.route('/status', methods=['GET'])
+def status():
+    """
+    This is a health check endpoint to check if the server is running
+    :return: a json object with a key "result" and value "ok"
+    """
+    return jsonify({"result": "ok"})
+
+
+# Calculating shortest path
+@app.route('/path', methods=['POST'])
+def path_finding():
     """
     This is the main endpoint for the path finding algorithm
     :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
     """
     # Get the json data from the request
-    content = details #request.json
+    content =  request.json 
+    #content =  details
 
     # Get the obstacles, big_turn, retrying, robot_x, robot_y, and robot_direction from the json data
     obstacles = content['obstacles']
@@ -88,16 +70,92 @@ def path_finding(details):
         else:
             i += 1
         path_results.append(optimal_path[i].get_dict())
-    print(distance)
-    print(path_results)
-    print(commands)
-    return{
+    return jsonify({
         "data": {
             'distance': distance,
             'path': path_results,
             'commands': commands
         },
         "error": None
-    }
+    })
 
-path_finding(details)
+
+# Code Section for Simulator
+
+# global variables
+Direction = {
+  "NORTH": 0,
+  "EAST": 2,
+  "SOUTH": 4,
+  "WEST": 6,
+  "SKIP": 8,
+}
+obstacles = []  # This list will store your obstacles
+robot = {'x':1,'y':1,'d':0}
+counter = 0
+path = []
+commands = []
+position = 0
+
+@app.route('/')
+def hello():
+    return render_template('hello.html')
+
+@app.route('/simulator')
+def simulator():
+    return render_template('simulator.html',obstacles = obstacles, robot=robot)
+
+@app.route('/add/obstacle', methods=['POST'])
+def add_obstacle():
+    x = request.form.get('x')
+    y = request.form.get('y')
+    direction = request.form.get('direction')
+    obstacle = {'x': x, 'y':y, 'd':direction}
+    obstacles.append(obstacle)
+    return redirect(url_for('simulator'))
+
+@app.route('/delete/obstacle/<obstacle_json>')
+def delete_obstacle(obstacle_json):
+    obstacle = json.loads(obstacle_json)
+    if obstacle in obstacles: 
+        obstacles.remove(obstacle)
+    return redirect(url_for('simulator'))
+
+@app.route('/shortestpath')
+def shortest_path():
+    details = {}
+    details['robot_x'] = robot['x']
+    details['robot_y'] = robot['y']
+    details['robot_dir'] = robot['d']
+    details['retrying'] = True
+    details['obstacles'] = obstacles.copy()
+    for i in range(5):
+       details['obstacles'][i]['id'] = id+1
+
+    response = requests.post(" http://127.0.0.1:5000/path", json = details)
+    result = response.json()
+    positions = result['path'].copy()
+    commands = result['commands'].copy()
+    for command in commands: 
+        if "SNAP" in command: 
+            commands.remove(command)
+
+    # display from step 0.
+    
+
+    return redirect(url_for('simulator'))
+    
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+    # path_finding(details)
+
