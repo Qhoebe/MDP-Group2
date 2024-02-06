@@ -91,7 +91,8 @@ Direction = {
   "SKIP": 8,
 }
 obstacles = []  # This list will store your obstacles
-robot = {'x':1,'y':1,'d':0}
+default_robot = {'x':1,'y':1,'d':0,'s':-1}
+robot = {'x':1,'y':1,'d':0,'s':-1}
 counter = 0
 path = []
 commands = []
@@ -103,7 +104,7 @@ def hello():
 
 @app.route('/simulator')
 def simulator():
-    return render_template('simulator.html',obstacles = obstacles, robot=robot)
+    return render_template('simulator.html',obstacles = obstacles, robot=robot,path=path,commands=commands,position = position)
 
 @app.route('/add/obstacle', methods=['POST'])
 def add_obstacle():
@@ -123,6 +124,7 @@ def delete_obstacle(obstacle_json):
 
 @app.route('/shortestpath')
 def shortest_path():
+    # create request json
     details = {}
     details['robot_x'] = robot['x']
     details['robot_y'] = robot['y']
@@ -132,14 +134,18 @@ def shortest_path():
     for i in range(5):
        details['obstacles'][i]['id'] = id+1
 
+    # retrieve response
     response = requests.post(" http://127.0.0.1:5000/path", json = details)
     result = response.json()
-    positions = result['path'].copy()
+
+    # update info on simulator
+    path = result['path'].copy()
     commands = result['commands'].copy()
     for command in commands: 
         if "SNAP" in command: 
             commands.remove(command)
-
+    position = 0
+    robot = path[0]
     # display from step 0.
     
 
