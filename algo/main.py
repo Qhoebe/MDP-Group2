@@ -120,6 +120,24 @@ def delete_obstacle(obstacle_json):
     obstacle = json.loads(obstacle_json)
     if obstacle in obstacles: 
         obstacles.remove(obstacle)
+        # reset path
+        path = []
+        commands = []
+        position = 0
+    return redirect(url_for('simulator'))
+
+@app.route('/prev_step')
+def prev_step():
+    if position > 0: 
+        position -= 1
+        robot = path[position]
+    return redirect(url_for('simulator'))
+
+@app.route('/next_step')
+def next_step():
+    if position < len(path): 
+        position += 1
+        robot = path[position]
     return redirect(url_for('simulator'))
 
 @app.route('/shortestpath')

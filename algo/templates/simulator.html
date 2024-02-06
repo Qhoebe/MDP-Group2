@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <title>Simulator</title>
     <style>
         table {
@@ -17,10 +18,18 @@
         }
 
         .step-box {
-        width: 100px;
+        width: 500px;
         height: 100px;
+        border-radius: 10px;
         background-color: lightgrey;
-    }
+        }
+
+        .btn-round {
+            width: 50px;
+            height: 50px;
+            border-radius:100px;
+            background-color: white;
+        }
     </style>
     <script>
         let obstacles = {{ obstacles | tojson | safe}};
@@ -81,48 +90,80 @@
 </head>
 <body>
     <center><h1>Simulator</h1></center>
-    <div style="display:flex; flex-direction: row;"> 
-        
+    <div style="display:flex; flex-direction: row;justify-content: space-evenly;align-items: flex-start;"> 
         <!-- Displaying robot and obstacle details -->
-        <div style="display:flex;flex:1; flex-direction: column;align-content: center;">
-            <center>
+        <div style="display:flex;flex-direction: column;">
+            <div>    
                 <form action="{{ url_for('add_obstacle') }}" method="post">
                     <label for="obstacle">Add obstacle:</label>
                     <input type="number" id="x" name="x" required min="0" max="19" placeholder="x">
                     <input type="number" id="y" name="y" required min="0" max="19" placeholder="y">
                     <select type="number" id="direction" name="direction" required placeholder="direction">
-                            <option value="0">Up</option>
-                            <option value="2">Right</option>
-                            <option value="4">Down</option>
-                            <option value="6">Left</option>
+                            <option value="0">North</option>
+                            <option value="2">East</option>
+                            <option value="4">South</option>
+                            <option value="6">West</option>
                             <option value="8">Skip</option>
                     </select>
                     <button type="submit">Add</button>
                 </form>
+            </div>
+            <div>
                 {% if obstacles|length > 0 %}
                 <h1>Obstacles:</h1>
-                <div style="flex:5;">
-                    {% for obstacle in obstacles %}
-                    
-                        <span class="badge">
-                            <div style="display:flex;flex-direction: row; align-items: flex-start;width: 200px;">
-                            <div style="flex:1;">x:{{ obstacle.x }}</div>
-                            <div style="flex:1;">y:{{ obstacle.y }}</div>
-                            <div style="flex:2;">direction:{{ obstacle.d }}</div>
+                {% for obstacle in obstacles %}
+                    <span class="badge">
+                    <div style="display:flex; flex-direction: row;justify-content: space-evenly;align-items: flex-start;
+                                width:250px;border: 1px solid grey;background-color: lightgray; border-radius: 10px; padding:5px">
+                        <div style="width: 40px;">x: {{ obstacle.x }}</div>
+                        <div style="width: 40px;">y: {{ obstacle.y }}</div>
+                        {% if obstacle.d == "0" %}
+                        <div style="width: 120px;">direction: North</div>
+                        {% elif obstacle.d == "2" %}
+                        <div style="width: 120px;">direction: East</div>                                
+                        {% elif obstacle.d == "4" %}
+                        <div style="width: 120px;">direction: South</div>  
+                        {% elif obstacle.d == "6" %}
+                        <div style="width: 120px;">direction: West</div>  
+                        {% else %}
+                        <div style="width: 120px;">direction: Skip</div>  
+                        {% endif %}
+                        <div>
                             <a href="{{ url_for('delete_obstacle', obstacle_json=(obstacle|tojson)) }}"
-                            style="text-decoration: none; flex:1;">x</a>
+                            style="text-decoration: none;"><i class="fas fa-times cross"></i></a>
                         </div>
-                        </span>
-                    {% endfor %}
-                </div>
+                    </div>
+                    <div style="padding: 5px;"></div>
+                    </span>
+                {% endfor %}
                 {% endif %}
-            </center>
+            </div>
         </div>
         <!-- Displaying Simulator Grids -->
-        <div style="display:flex;flex:2; flex-direction: column;  align-items: center;align-content: center;">
-            <div id="table-container"></div>
+        <div style="display:flex;flex-direction: column;align-items: center;">
+            <div id="table-container" style="padding:5px"></div>
             <!-- Displaying steps -->
-            <div class="step-box" style="background-color: light blue;"
+            <div class="step-box" style="display:flex;align-items: center;padding:5px; justify-content: space-evenly;">
+                {%if path|length > 0 and position > 0 %}
+                    <form action="/prev_step" method="get">
+                        <button class="btn-round" type="submit"><</button>
+                    </form>
+                {% else %}
+                    <form action="/prev_step" method="get">
+                        <button class="btn-round" type="submit" disabled><</button>
+                    </form>
+                {% endif %}
+
+
+                {%if path|length > 0 and position < (path|length - 1) %}
+                    <form action="/next_step" method="get">
+                        <button class="btn-round" type="submit">></button>
+                    </form>
+                {% else %}
+                    <form action="/next_step" method="get">
+                        <button class="btn-round" type="submit" disabled>></button>
+                    </form>
+                {% endif %}
 
             </div>
         </div>
