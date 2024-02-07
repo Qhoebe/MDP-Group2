@@ -33,6 +33,53 @@
     </style>
     <script>
         let obstacles = {{ obstacles | tojson | safe}};
+        function instruction(command){
+            let instruction = ""; 
+            if (command == "ST") {
+                instruction = "start";
+            } else {
+                if (command == "FIN") {
+                    instruction = "finish"
+                } else {
+                    var action = command.substring(0, 2);
+                    var value = command.substring(2); 
+                    if (value == "00") {
+                        switch (action) {
+                            case 'FL':
+                                instruction = "forward left ";
+                                break;
+                            case 'FR':
+                                instruction = "forward right ";
+                                break;
+                            case 'BL':
+                                instruction = "backwards left ";
+                                break;
+                            case 'BR':
+                                instruction = "backwards right ";
+                                break;
+                        }
+                        instruction += "90° rotation"
+                    } else {
+                        if (action == "FW"){
+                            instruction = "forward ";
+                        } else {
+                            instruction = "backwards ";
+                        }
+                        instruction += value + "cm";
+                    }
+
+                }
+            }
+            return instruction;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            var commands = {{ commands | tojson | safe }};
+            var position = {{ position }};
+            document.getElementById('curr-step').innerHTML =  instruction(commands[position]) ;
+            document.getElementById('next-step').innerHTML =  instruction(commands[position+1]) ;
+        });
+
+
         function default_grid() {
             let rows = [];
             for (var i = 19; i >=0; i--) {
@@ -61,23 +108,23 @@
                 let y = Number(obstacle.y);
                 let index =  (19-y)*23 + x + 2;
                 switch (obstacle.d) {
-                    case '0':
+                    case 0:
                         rows[index] = '<td style="background-color: blue;border-top: 4px solid red;"></td>';
                         break;
-                    case '2':
+                    case 2:
                         rows[index] = '<td style="background-color: blue;border-right: 4px solid red;"></td>';
                         break;
-                    case '4':
+                    case 4:
                         rows[index] = '<td style="background-color: blue;border-bottom: 4px solid red;"></td>';
                         break;
-                    case '6':
+                    case 6:
                         rows[index] = '<td style="background-color: blue;border-left: 4px solid red;"></td>';
                         break;
-                    case '8': 
+                    case 8: 
                         rows[index] = '<td style="background-color: blue;"></td>';
                         break;
                     default:
-                        rows[index] = '<td style="border: 1px solid black;"></td>';;
+                        rows[index] = '<td style="border: 1px solid black;"></td>';
                 }       
             }
             return rows.join('');
@@ -99,11 +146,11 @@
                     <input type="number" id="x" name="x" required min="0" max="19" placeholder="x">
                     <input type="number" id="y" name="y" required min="0" max="19" placeholder="y">
                     <select type="number" id="direction" name="direction" required placeholder="direction">
-                            <option value="0">North</option>
-                            <option value="2">East</option>
-                            <option value="4">South</option>
-                            <option value="6">West</option>
-                            <option value="8">Skip</option>
+                            <option value=0>North</option>
+                            <option value=2>East</option>
+                            <option value=4>South</option>
+                            <option value=6>West</option>
+                            <option value=8>Skip</option>
                     </select>
                     <button type="submit">Add</button>
                 </form>
@@ -117,13 +164,13 @@
                                 width:250px;border: 1px solid grey;background-color: lightgray; border-radius: 10px; padding:5px">
                         <div style="width: 40px;">x: {{ obstacle.x }}</div>
                         <div style="width: 40px;">y: {{ obstacle.y }}</div>
-                        {% if obstacle.d == "0" %}
+                        {% if obstacle.d == 0 %}
                         <div style="width: 120px;">direction: North</div>
-                        {% elif obstacle.d == "2" %}
+                        {% elif obstacle.d == 2 %}
                         <div style="width: 120px;">direction: East</div>                                
-                        {% elif obstacle.d == "4" %}
+                        {% elif obstacle.d == 4 %}
                         <div style="width: 120px;">direction: South</div>  
-                        {% elif obstacle.d == "6" %}
+                        {% elif obstacle.d == 6 %}
                         <div style="width: 120px;">direction: West</div>  
                         {% else %}
                         <div style="width: 120px;">direction: Skip</div>  
@@ -138,12 +185,17 @@
                 {% endfor %}
                 {% endif %}
             </div>
+            <form action="/shortestpath" method="get">
+                <button type="submit">submit</button>
+            </form>
+            <div>This only for testing. Delete after use. robot = {{robot}}</div>
         </div>
         <!-- Displaying Simulator Grids -->
         <div style="display:flex;flex-direction: column;align-items: center;">
             <div id="table-container" style="padding:5px"></div>
             <!-- Displaying steps -->
             <div class="step-box" style="display:flex;align-items: center;padding:5px; justify-content: space-evenly;">
+
                 {%if path|length > 0 and position > 0 %}
                     <form action="/prev_step" method="get">
                         <button class="btn-round" type="submit"><</button>
@@ -153,7 +205,28 @@
                         <button class="btn-round" type="submit" disabled><</button>
                     </form>
                 {% endif %}
-
+                <!-- show path -->
+                {%if path|length == 0 %}
+                    <div style="width:400px;text-align: center;">Press "Submit" to calculate path!</div>
+                {% else %} 
+                    <div style="width:400px;display:flex;flex-direction: column;align-items: center;">
+                        <div  style="text-align: center;">Step {{position}}/{{path|length - 1}}</div>
+                        <div style="display:flex;flex-direction: row;">
+                            <!-- executed step -->
+                            <div style="width:200px;display:flex;flex-direction: column;">
+                                <div style="text-align: center;">Executed Step:</div>
+                                <div style="text-align: center;">{{commands[position]}}</div>
+                                <div id="curr-step" style="text-align: center;"></div>
+                            </div>
+                            <!-- next step -->
+                            <div style="width:200px;display:flex;flex-direction: column;">
+                                <div style="text-align: center;">Next Step:</div>
+                                <div style="text-align: center;">{{commands[position+1]}}</div>
+                                <div id="next-step" style="text-align: center;"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
 
                 {%if path|length > 0 and position < (path|length - 1) %}
                     <form action="/next_step" method="get">

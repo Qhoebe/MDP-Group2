@@ -108,15 +108,26 @@ def simulator():
 
 @app.route('/add/obstacle', methods=['POST'])
 def add_obstacle():
-    x = request.form.get('x')
-    y = request.form.get('y')
-    direction = request.form.get('direction')
+    global path
+    global commands
+    global position
+    x = int(request.form.get('x'))
+    y = int(request.form.get('y'))
+    direction = int(request.form.get('direction'))
     obstacle = {'x': x, 'y':y, 'd':direction}
     obstacles.append(obstacle)
+    # reset grid. 
+    commands = []
+    path = []
+    position = 0
+    
     return redirect(url_for('simulator'))
 
 @app.route('/delete/obstacle/<obstacle_json>')
 def delete_obstacle(obstacle_json):
+    global path
+    global commands
+    global position
     obstacle = json.loads(obstacle_json)
     if obstacle in obstacles: 
         obstacles.remove(obstacle)
@@ -128,6 +139,8 @@ def delete_obstacle(obstacle_json):
 
 @app.route('/prev_step')
 def prev_step():
+    global robot
+    global position
     if position > 0: 
         position -= 1
         robot = path[position]
@@ -135,6 +148,8 @@ def prev_step():
 
 @app.route('/next_step')
 def next_step():
+    global robot
+    global position
     if position < len(path): 
         position += 1
         robot = path[position]
@@ -142,6 +157,11 @@ def next_step():
 
 @app.route('/shortestpath')
 def shortest_path():
+    global position
+    global path
+    global commands
+    global robot
+
     # create request json
     details = {}
     details['robot_x'] = robot['x']
@@ -149,19 +169,21 @@ def shortest_path():
     details['robot_dir'] = robot['d']
     details['retrying'] = True
     details['obstacles'] = obstacles.copy()
-    for i in range(5):
-       details['obstacles'][i]['id'] = id+1
+    for i in range(len(obstacles)):
+       details['obstacles'][i]['id'] = i+1
 
     # retrieve response
     response = requests.post(" http://127.0.0.1:5000/path", json = details)
+        
     result = response.json()
 
     # update info on simulator
-    path = result['path'].copy()
-    commands = result['commands'].copy()
+    path = result['data']['path'].copy()
+    commands = result['data']['commands'].copy()
     for command in commands: 
         if "SNAP" in command: 
             commands.remove(command)
+    commands.insert(0,"ST")
     position = 0
     robot = path[0]
     # display from step 0.
