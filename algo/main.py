@@ -115,13 +115,20 @@ def add_obstacle():
     y = int(request.form.get('y'))
     direction = int(request.form.get('direction'))
     obstacle = {'x': x, 'y':y, 'd':direction}
-    obstacles.append(obstacle)
-    # reset grid. 
-    commands = []
-    path = []
-    position = 0
-    
+    if is_unique_obstacle(obstacle, obstacles):
+        obstacles.append(obstacle)
+        # reset grid. 
+        commands = []
+        path = []
+        position = 0
+
     return redirect(url_for('simulator'))
+
+def is_unique_obstacle(obstacle,obstacles):
+    for obs in obstacles: 
+        if obs['y'] == obstacle['y'] and obs['x'] == obstacle['x']:
+            return False
+    return True
 
 @app.route('/delete/obstacle/<obstacle_json>')
 def delete_obstacle(obstacle_json):
