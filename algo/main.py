@@ -102,6 +102,10 @@ position = 0
 def hello():
     return render_template('hello.html')
 
+@app.route('/new')
+def new():
+    return render_template('new.html')
+
 @app.route('/simulator')
 def simulator():
     return render_template('simulator.html',obstacles = obstacles, robot=robot,path=path,commands=commands,position = position)
