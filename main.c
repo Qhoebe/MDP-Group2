@@ -678,43 +678,59 @@ void motors(void *argument)
 void encoder_task(void *argument)
 {
   /* USER CODE BEGIN encoder_task */
-  /* Infinite loop */
-	HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
+HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
+		HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);
 
-	int cnt1,cnt2,diff;
-	uint32_t tick;
+		int cnt1,cnt2,diff1;
+		int cnt3,cnt4,diff2;
+		uint32_t tick;
 
-	cnt1 = __HAL_TIM_GET_COUNTER(&htim2);
-	tick = HAL_GetTick();
-
-	uint8_t another[20] = "";
-	uint16_t dir;
-  for(;;)
-  {
-	if(HAL_GetTick()-tick > 1000L){
-		cnt2 = __HAL_TIM_GET_COUNTER(&htim2);
-		if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
-			if(cnt2<cnt1)
-				diff = cnt1-cnt2;
-			else
-				diff = (65535 - cnt2)+cnt1;
-		}else{
-			if(cnt2>cnt1)
-				diff = cnt2-cnt1;
-			else
-				diff = (65535 - cnt1) + cnt2;
-		}
-
-		sprintf(another, "Speed:%5d\0", diff);
-		OLED_ShowString(10,20,another);
-		dir = __HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2);
-		sprintf(another, "Dir:%5d\0", dir);
-		OLED_ShowString(10,30,another);
 		cnt1 = __HAL_TIM_GET_COUNTER(&htim2);
+		cnt3 = __HAL_TIM_GET_COUNTER(&htim3);
 		tick = HAL_GetTick();
-	}
-    //osDelay(1);
-  }
+
+		uint8_t another[30] = "";
+		//uint16_t dir;
+	  for(;;)
+	  {
+		if(HAL_GetTick()-tick > 1000L){
+			cnt2 = __HAL_TIM_GET_COUNTER(&htim2);
+			cnt4 = __HAL_TIM_GET_COUNTER(&htim3);
+			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
+				if(cnt2<cnt1)
+					diff1 = cnt1-cnt2;
+				else
+					diff1 = (65535 - cnt2)+cnt1;
+			}else{
+				if(cnt2>cnt1)
+					diff1 = cnt2-cnt1;
+				else
+					diff1 = (65535 - cnt1) + cnt2;
+			}
+
+			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3)){
+				if(cnt4<cnt3)
+					diff2 = cnt3-cnt4;
+				else
+					diff2 = (65535 - cnt4)+cnt3;
+			}else{
+				if(cnt4>cnt3)
+					diff2 = cnt4-cnt3;
+				else
+					diff2 = (65535 - cnt3) + cnt4;
+			}
+
+			sprintf(another, "Speed 1:%5d\0", diff1);
+			OLED_ShowString(10,20,another);
+			//dir = __HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2);
+			sprintf(another, "Speed 2:%5d\0", diff2);
+			OLED_ShowString(10,30,another);
+			cnt1 = __HAL_TIM_GET_COUNTER(&htim2);
+			cnt3 = __HAL_TIM_GET_COUNTER(&htim3);
+			tick = HAL_GetTick();
+		}
+	    //osDelay(1);
+	  }
   /* USER CODE END encoder_task */
 }
 
