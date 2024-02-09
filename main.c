@@ -317,6 +317,22 @@ static void MX_TIM1_Init(void)
 static void MX_TIM2_Init(void)
 {
 
+/*
+
+Steps to set up Encoder
+Choose PB3  -> TIM2_CH1
+       PA15 -> TIM2_CH1
+
+Get into TIM2
+Choose Combined Channels
+Counter Period = 65535
+Encoder Mode   = TI1 and TI2
+Input filter   = 10 (both)
+
+Apply same thing to PA6 and PA7 for motor B encoder
+
+*/
+	
   /* USER CODE BEGIN TIM2_Init 0 */
 
   /* USER CODE END TIM2_Init 0 */
