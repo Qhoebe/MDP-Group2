@@ -366,6 +366,25 @@ static void MX_TIM2_Init(void)
 static void MX_TIM8_Init(void)
 {
 
+/*
+
+Steps to recreate the settings:
+Choose PC6 as TIM8_CH1, name it PWMA
+Choose PC7 as TIM8_CH2, name it PWMB
+
+Enter TIM8, set Counter Period to 7199
+Clock source = Internal Clock
+Channel 1    = PWM Generation No Output
+Channel 2    = PWM Generation No Output
+
+Choose  PA2 -> AIN2
+	PA3 -> AIN1
+ 	PA4 -> BIN1
+  	PA5 -> BIN2
+All GPIO Output
+
+*/
+	
   /* USER CODE BEGIN TIM8_Init 0 */
 
   /* USER CODE END TIM8_Init 0 */
