@@ -80,7 +80,6 @@
             document.getElementById('next-step').innerHTML =  instruction(commands[position+1]) ;
         });
 
-        
 
         function default_grid() {
             let rows = [];
@@ -172,13 +171,10 @@
             rows = robot_grid(rows);
             return rows.join('');
         }
-
         document.addEventListener('DOMContentLoaded', function () {
             // Call the default_grid function and set the generated HTML as innerHTML of the table-container
             document.getElementById('table-container').innerHTML = '<table>' + create_grid() + '</table>';
         });
-
-
     </script>
 </head>
 <body>
@@ -186,9 +182,10 @@
     <div style="display:flex; flex-direction: row;justify-content: space-evenly;align-items: flex-start;"> 
         <!-- Displaying robot and obstacle details -->
         <div style="display:flex;flex-direction: column;">
-            <div>    
+            
+            <div style="padding: 5px;">    
                 <form action="{{ url_for('add_obstacle') }}" method="post">
-                    <label for="obstacle">Add obstacle:</label>
+                    <label for="obstacle" style="display: inline-block;width: 90px;text-align: right;">Add obstacle:</label>
                     <input type="number" id="x" name="x" required min="0" max="19" placeholder="x">
                     <input type="number" id="y" name="y" required min="0" max="19" placeholder="y">
                     <select type="number" id="direction" name="direction" required placeholder="direction">
@@ -198,9 +195,22 @@
                             <option value=6>West</option>
                             <option value=8>Skip</option>
                     </select>
-                    <button type="submit">Add</button>
+                    <button type="submit" style="width:50px">Add</button>
                 </form>
             </div>
+            <div style="padding:10px;"></div>
+            <div style="display:flex; flex-direction: row;justify-content:flex-start; padding:5px;">
+                <form action="/reset/robot" method="get">
+                    <button type="submit">Reset Robot</button>
+                </form>
+                <form action="/reset/all" method="get">
+                    <button type="submit">Reset All</button>
+                </form>
+                <form action="/shortestpath" method="get">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+
             <div>
                 {% if obstacles|length > 0 %}
                 <h1>Obstacles:</h1>
@@ -231,16 +241,9 @@
                 {% endfor %}
                 {% endif %}
             </div>
-            <form action="/shortestpath" method="get">
-                <button type="submit">submit</button>
-            </form>
-            <div>This only for testing. Delete after use. robot = {{robot}}</div>
-
             
-
-
+            <div>This only for testing. Delete after use. robot = {{robot}}</div>
         </div>
-        
         <!-- Displaying Simulator Grids -->
         <div style="display:flex;flex-direction: column;align-items: center;">
             <div id="table-container" style="padding:5px"></div>
@@ -276,13 +279,8 @@
                                 <div id="next-step" style="text-align: center;"></div>
                             </div>
                         </div>
-                        
-
                     </div>
                 {% endif %}
-
-
-
 
                 {%if path|length > 0 and position < (path|length - 1) %}
                     <form action="/next_step" method="get">
@@ -293,18 +291,6 @@
                         <button class="btn-round" type="submit" disabled>></button>
                     </form>
                 {% endif %}
-
-                <button type="submit">Reset Robot</button>
-                <!-- <button id="resetrobot" onclick="ResetRobotContent()">Reset Robot</button> -->
-
-                <!-- Container to display content -->
-                <div id="robotContainer"></div> 
-
-                <!-- <button id="resetall" onclick="ResetAllContent()">Reset All</button> -->
-
-                <button type="submit">Reset All</button>
-                <!-- Container to display content -->
-                <div id="resetallContainer"></div> 
 
             </div>
         </div>

@@ -148,6 +148,34 @@ def delete_obstacle(obstacle_json):
         position = 0
     return redirect(url_for('simulator'))
 
+@app.route('/reset/robot')
+def reset_robot():
+    global robot
+    global path
+    global commands
+    global position
+    robot = default_robot
+    # reset path
+    path = []
+    commands = []
+    position = 0
+    return redirect(url_for('simulator'))
+
+@app.route('/reset/all')
+def reset_all():
+    global robot
+    global path
+    global commands
+    global position
+    global obstacles
+    robot = default_robot
+    obstacles = []
+    # reset path
+    path = []
+    commands = []
+    position = 0
+    return redirect(url_for('simulator'))
+
 @app.route('/prev_step')
 def prev_step():
     global robot
