@@ -80,6 +80,7 @@
             document.getElementById('next-step').innerHTML =  instruction(commands[position+1]) ;
         });
 
+        
 
         function default_grid() {
             let rows = [];
@@ -171,10 +172,13 @@
             rows = robot_grid(rows);
             return rows.join('');
         }
+
         document.addEventListener('DOMContentLoaded', function () {
             // Call the default_grid function and set the generated HTML as innerHTML of the table-container
             document.getElementById('table-container').innerHTML = '<table>' + create_grid() + '</table>';
         });
+
+
     </script>
 </head>
 <body>
@@ -231,7 +235,12 @@
                 <button type="submit">submit</button>
             </form>
             <div>This only for testing. Delete after use. robot = {{robot}}</div>
+
+            
+
+
         </div>
+        
         <!-- Displaying Simulator Grids -->
         <div style="display:flex;flex-direction: column;align-items: center;">
             <div id="table-container" style="padding:5px"></div>
@@ -267,8 +276,13 @@
                                 <div id="next-step" style="text-align: center;"></div>
                             </div>
                         </div>
+                        
+
                     </div>
                 {% endif %}
+
+
+
 
                 {%if path|length > 0 and position < (path|length - 1) %}
                     <form action="/next_step" method="get">
@@ -279,6 +293,18 @@
                         <button class="btn-round" type="submit" disabled>></button>
                     </form>
                 {% endif %}
+
+                <button type="submit">Reset Robot</button>
+                <!-- <button id="resetrobot" onclick="ResetRobotContent()">Reset Robot</button> -->
+
+                <!-- Container to display content -->
+                <div id="robotContainer"></div> 
+
+                <!-- <button id="resetall" onclick="ResetAllContent()">Reset All</button> -->
+
+                <button type="submit">Reset All</button>
+                <!-- Container to display content -->
+                <div id="resetallContainer"></div> 
 
             </div>
         </div>
