@@ -40,7 +40,7 @@ class TrackSolver:
             return None
 
         distance = self.distance1 - 40 + 15
-        commands.insert(0,'FW{}'.format(distance))
+        commands.insert(0,'FW{}'.format(round(distance)))
         
         return commands
     
@@ -57,7 +57,7 @@ class TrackSolver:
         commands = []
         if(self.arrow2 == 1):
             distance = self.distance2 - 40 + 15
-            commands.append('FW{}'.format(distance))
+            commands.append('FW{}'.format(round(distance)))
             commands.append('FL60')
             commands.append('FR60')
 
@@ -67,9 +67,9 @@ class TrackSolver:
             d = math.sqrt(x**2 + y**2)
             l = math.sqrt(d**2 - (y*2)**2)
             angle = 90 - ((math.acos(2*self.radius/d) + math.atan2(y,x)) / math.pi * 180)
-            commands.append('FR{}'.format(angle))
-            commands.append('FW{}'.format(l))
-            commands.append('FL{}'.format(angle))
+            commands.append('FR{}'.format(round(angle)))
+            commands.append('FW{}'.format(round(l)))
+            commands.append('FL{}'.format(round(angle)))
 
         else: 
             return None
@@ -86,13 +86,13 @@ class TrackSolver:
             d = math.sqrt(x**2 + y**2)
             l = math.sqrt(d**2 - (y*2)**2)
             angle = 90 - ((math.acos(2*self.radius/d) - math.atan2(y,x)) / math.pi * 180)
-            commands.append('FL{}'.format(angle))
-            commands.append('FW{}'.format(l))
-            commands.append('FR{}'.format(angle))
+            commands.append('FL{}'.format(round(angle)))
+            commands.append('FW{}'.format(round(l)))
+            commands.append('FR{}'.format(round(angle)))
 
         elif (self.arrow2 == 2):
             distance = self.distance2 - 40 + 15
-            commands.append('FW{}'.format(distance))
+            commands.append('FW{}'.format(round(distance)))
             commands.append('FR60')
             commands.append('FL60')
 
@@ -112,8 +112,8 @@ class TrackSolver:
             angle = 360 - ((math.atan2(y,x) + math.acos(self.radius/d))/math.pi*180)
             commands.append('FR{}'.format(90))
             commands.append('FW{}'.format(50))
-            commands.append('FR{}'.format(angle))
-            commands.append('FW{}'.format(l))
+            commands.append('FR{}'.format(round(angle)))
+            commands.append('FW{}'.format(round(l)))
 
         elif (self.arrow2 == 2):
             x = - (self.distance1 + self.distance2 + 40)
@@ -123,8 +123,8 @@ class TrackSolver:
             angle = 360 + ((math.atan2(y,x) - math.acos(self.radius/d))/math.pi*180)
             commands.append('FL{}'.format(90))
             commands.append('FW{}'.format(50))
-            commands.append('FL{}'.format(angle))
-            commands.append('FW{}'.format(l))
+            commands.append('FL{}'.format(round(angle)))
+            commands.append('FW{}'.format(round(l)))
 
         else: 
             return None

@@ -44,31 +44,26 @@
                 } else {
                     var action = command.substring(0, 2);
                     var value = command.substring(2); 
-                    if (value == "00") {
-                        switch (action) {
-                            case 'FL':
-                                instruction = "forward left ";
-                                break;
-                            case 'FR':
-                                instruction = "forward right ";
-                                break;
-                            case 'BL':
-                                instruction = "backwards left ";
-                                break;
-                            case 'BR':
-                                instruction = "backwards right ";
-                                break;
-                        }
-                        instruction += "90° rotation"
-                    } else {
-                        if (action == "FW"){
-                            instruction = "forward ";
-                        } else {
-                            instruction = "backwards ";
-                        }
-                        instruction += value + "cm";
+                    switch (action) {
+                        case 'FL':
+                            instruction = "forward left " + value + "° rotation";
+                            break;
+                        case 'FR':
+                            instruction = "forward right " + value + "° rotation";
+                            break;
+                        case 'BL':
+                            instruction = "backwards left " + value + "° rotation";
+                            break;
+                        case 'BR':
+                            instruction = "backwards right " + value + "° rotation";
+                            break;
+                        case 'FW':
+                            instruction = "forward " + value + "cm";
+                            break;
+                        case 'BW':
+                            instruction = "backwards " + value + "cm";
+                            break;
                     }
-
                 }
             }
             return instruction;

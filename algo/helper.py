@@ -121,63 +121,63 @@ def command_generator(states, obstacles):
             if states[i].direction == Direction.EAST:
                 # y value increased -> Forward Right
                 if states[i].y > states[i - 1].y:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
                 # y value decreased -> Backward Left
                 else:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
             # Facing west afterwards
             elif states[i].direction == Direction.WEST:
                 # y value increased -> Forward Left
                 if states[i].y > states[i - 1].y:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
                 # y value decreased -> Backward Right
                 else:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
             else:
-                raise Exception("Invalid turing direction")
+                raise Exception("Invalid turning direction")
 
         elif states[i - 1].direction == Direction.EAST:
             if states[i].direction == Direction.NORTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
                 else:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
 
             elif states[i].direction == Direction.SOUTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
                 else:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
             else:
                 raise Exception("Invalid turing direction")
 
         elif states[i - 1].direction == Direction.SOUTH:
             if states[i].direction == Direction.EAST:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
                 else:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
             elif states[i].direction == Direction.WEST:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
                 else:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
             else:
                 raise Exception("Invalid turing direction")
 
         elif states[i - 1].direction == Direction.WEST:
             if states[i].direction == Direction.NORTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
                 else:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
             elif states[i].direction == Direction.SOUTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
                 else:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
             else:
-                raise Exception("Invalid turing direction")
+                raise Exception("Invalid turning direction")
         else:
             raise Exception("Invalid position")
 
@@ -246,21 +246,22 @@ def command_generator(states, obstacles):
         if commands[i].startswith("BW") and compressed_commands[-1].startswith("BW"):
             # Get the number of steps of previous command
             steps = int(compressed_commands[-1][2:])
-            # If steps are not 90, add 10 to the steps
-            if steps != 90:
-                compressed_commands[-1] = "BW{}".format(steps + 10)
-                continue
+            # # If steps are not 90, add 10 to the steps
+            # if steps != 90:
+            compressed_commands[-1] = "BW{}".format(steps + 10)
+            #     continue
 
         # If both commands are FW
         elif commands[i].startswith("FW") and compressed_commands[-1].startswith("FW"):
             # Get the number of steps of previous command
             steps = int(compressed_commands[-1][2:])
-            # If steps are not 90, add 10 to the steps
-            if steps != 90:
-                compressed_commands[-1] = "FW{}".format(steps + 10)
-                continue
+            # # If steps are not 90, add 10 to the steps
+            # if steps != 90:
+            compressed_commands[-1] = "FW{}".format(steps + 10)
+            #     continue
         
         # Otherwise, just add as usual
-        compressed_commands.append(commands[i])
+        else: 
+            compressed_commands.append(commands[i])
 
     return compressed_commands
