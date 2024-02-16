@@ -739,7 +739,8 @@ HAL_GPIO_WritePin(GPIOA,AIN2_Pin, GPIO_PIN_RESET);//forward
 				  HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
 	htim1.Instance->CCR4 = 180; //extreme right
 	osDelay(1000);
-	htim1.Instance->CCR4 = 137; //center
+	if(htim1.Instance->CCR4 == 136) htim1.Instance = 137;
+	else htim1.Instance->CCR4 = 136; //center
 	osDelay(1000);
 
 	pwm_left = (int16_t) pwmVal_target * 82 / 100;
