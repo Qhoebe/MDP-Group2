@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context=".HomeFragment"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:weightSum="5"
+    android:background="@drawable/cars">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:weightSum="5">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:orientation="horizontal">
+
+<!--            <view-->
+<!--                android:id="@+id/mapView"-->
+<!--                class="com.example.androidcontroller.GridMap"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                tools:ignore="MissingConstraints" />-->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <view
+                android:id="@+id/mapView"
+                class="com.example.androidcontroller.GridMap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:alpha="0.8"
+                android:layout_weight="11" /> <!-- Adjust this weight to make the map larger or smaller -->
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="5dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/robotStatusTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Current Status"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="4dp"
+                    android:alpha="0.8"
+                    app:cardBackgroundColor="@color/grey"> <!-- Replace with your desired background color -->
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp"> <!-- This padding will create space between the edges of the CardView and the content -->
+
+                        <TextView
+                            android:id="@+id/robotStatusText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:textStyle="bold"
+                            android:text="IDLE." />
+
+                        <TextView
+                            android:id="@+id/txt_timeTaken"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TextView"
+                            android:textStyle="bold"
+                            android:visibility="invisible"/>
+
+                        <!-- Add more TextViews here if needed -->
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+
+                <!--                <LinearLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:weightSum="2">-->
+
+<!--                    <Button-->
+<!--                        android:id="@+id/btnResetArena"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:padding="5dp"-->
+<!--                        android:text="Reset Arena"-->
+<!--                        android:textAlignment="viewStart"-->
+<!--                        android:textSize="12sp"-->
+<!--                        app:icon="@drawable/ic_baseline_refresh_24" />-->
+
+<!--                    <Button-->
+<!--                        android:id="@+id/btnSetObstacle"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:padding="5dp"-->
+<!--                        android:text="Set Obstacle"-->
+<!--                        android:textAlignment="viewStart"-->
+<!--                        android:textSize="12sp"-->
+<!--                        app:icon="@drawable/ic_baseline_gps_fixed_24" />-->
+
+<!--                    <Button-->
+<!--                        android:id="@+id/btnDirectionFacing"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:padding="5dp"-->
+<!--                        android:text="Set Facing"-->
+<!--                        android:textAlignment="viewStart"-->
+<!--                        android:textSize="12sp"-->
+<!--                        app:icon="@drawable/ic_baseline_text_rotation_angleup_24" />-->
+
+<!--                    <Button-->
+<!--                        android:id="@+id/btnPlaceRobot"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:padding="5dp"-->
+<!--                        android:text="Place Robot"-->
+<!--                        android:textAlignment="viewStart"-->
+<!--                        android:textSize="12sp"-->
+<!--                        app:icon="@drawable/ic_baseline_directions_car_24" />-->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:weightSum="2">
+
+
+                        <Switch
+                            android:id="@+id/switch_manualMode"
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="Manual"
+                            android:textAlignment="viewStart"
+                            android:textColor="@color/white"
+                            android:textSize="16sp" />
+
+                        <Switch
+                            android:id="@+id/switch_outdoor"
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="Outdoor"
+                            android:textColor="@color/white"
+                            android:textAlignment="viewStart"
+                            android:textSize="16sp" />
+
+                        <Switch
+                            android:id="@+id/switch_turnmode"
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="Turn"
+                            android:textColor="@color/white"/>
+                    </LinearLayout>
+
+                    <!-- Row 1 with Reset Arena and Set Obstacle -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <Button
+                            android:id="@+id/btnPlaceRobot"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:text="Place Robot"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="10dp" />
+
+                        <Button
+                            android:id="@+id/btnSetObstacle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:text="+ Obstacle"
+                            android:textSize="14sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <!-- Row 2 with Set Facing and Place Robot -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <Button
+                            android:id="@+id/btnDirectionFacing"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:text="Set Facing"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="10dp"/>
+                        <Button
+                            android:id="@+id/btnResetArena"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="5dp"
+                            android:text="Reset Arena"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+                    </LinearLayout>
+
+
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="5dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/manualControlTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Robot Controls"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:orientation="horizontal"
+                    android:columnCount="3">
+                    <Button
+                        android:id="@+id/temp_btnFW10"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="FW10" />
+
+                    <Button
+                        android:id="@+id/temp_btnBW10"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BW10" />
+
+                    <Button
+                        android:id="@+id/temp_btnFL00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="FL00" />
+
+                    <Button
+                        android:id="@+id/temp_btnFR00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="FR00" />
+
+                    <Button
+                        android:id="@+id/temp_btnBL00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BL00" />
+
+                    <Button
+                        android:id="@+id/temp_btnBR00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BR00" />
+                </GridLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
+
+                        <ImageButton
+                            android:id="@+id/upArrowBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:src="@drawable/ic_arrow_up" />
+
+                        <ImageButton
+                            android:id="@+id/leftArrowBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toLeftOf="@id/upArrowBtn"
+                            android:src="@drawable/ic_arrow_left" />
+
+                        <ImageButton
+                            android:id="@+id/rightArrowBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toRightOf="@id/upArrowBtn"
+                            android:src="@drawable/ic_arrow_right" />
+
+                        <ImageButton
+                            android:id="@+id/downArrowBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_centerHorizontal="true"
+                            android:src="@drawable/ic_arrow_down" />
+
+                    </RelativeLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:weightSum="3">
+
+                        <TextView
+                            android:id="@+id/robot_x_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:layout_weight="1"
+                            android:layout_marginLeft="10dp"
+                            android:text="X:"
+                            android:textColor="@color/white"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/robot_y_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:layout_weight="1"
+                            android:layout_marginLeft="10dp"
+                            android:text="Y:"
+                            android:textColor="@color/white"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/robotDirText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:layout_marginBottom="20dp"
+                            android:layout_weight="1"
+                            android:layout_marginLeft="10dp"
+                            android:text="F"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"
+                             />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="2dp"
+                    android:weightSum="2">
+
+                    <Button
+                        android:id="@+id/btnSendInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="1dp"
+                        android:layout_marginRight="1dp"
+                        android:layout_weight="1"
+                        android:text="Send Arena"
+                        android:textStyle="bold"
+                        android:textAlignment="viewStart"
+                        android:textSize="14sp"
+                        app:icon="@drawable/ic_baseline_send_24" />
+
+                    <Button
+                        android:id="@+id/btnStartFastestCar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dp"
+                        android:layout_weight="1"
+                        android:text="Start Fastest Car"
+                        android:textStyle="bold"
+                        android:textAlignment="viewStart"
+                        android:textSize="14sp"
+                        app:icon="@drawable/ic_baseline_timer_24" />
+
+                    <Button
+                        android:id="@+id/btnStartImageRec"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dp"
+                        android:layout_weight="1"
+                        android:text="Start Image Rec"
+                        android:textStyle="bold"
+                        android:textAlignment="viewStart"
+                        android:textSize="14sp"
+                        app:icon="@drawable/ic_baseline_image_search_24" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+</LinearLayout>
