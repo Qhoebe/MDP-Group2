@@ -602,6 +602,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	HAL_UART_Transmit(&huart3, (uint8_t *) aRxBuffer, 10 , 0xFFFF);
 
 }
+
+int16_t pwmVal_target = 1000;
+
+int16_t error_left = 0, error_right = 0;
+int16_t pwm_left, pwm_right;
+
+int16_t cnt1,cnt2,diff1;
+int16_t cnt3,cnt4,diff2;
+uint32_t tick;
+
+int16_t abs(int16_t value)
+{
+	return (value > 0) ? value : -value;
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -715,6 +729,58 @@ void motors(void *argument)
 	    osDelay(10);
 	  }
   /* USER CODE END motors */
+
+// 	Code for control part
+/*
+HAL_GPIO_WritePin(GPIOA,AIN2_Pin, GPIO_PIN_RESET);//forward
+				  HAL_GPIO_WritePin(GPIOA,AIN1_Pin, GPIO_PIN_SET);
+				  HAL_GPIO_WritePin(GPIOA,BIN2_Pin, GPIO_PIN_RESET);//forward
+				  HAL_GPIO_WritePin(GPIOA,BIN1_Pin, GPIO_PIN_SET);
+				  HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
+	htim1.Instance->CCR4 = 180; //extreme right
+	osDelay(1000);
+	htim1.Instance->CCR4 = 137; //center
+	osDelay(1000);
+
+	pwm_left = (int16_t) pwmVal_target * 82 / 100;
+	pwm_right = (int16_t) pwmVal_target * 82 / 100;
+	diff1 = pwmVal_target;
+	diff2 = pwmVal_target;
+
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, pwm_left);
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, pwm_right);
+  for(;;)
+  {
+	  error_left = diff1 - pwmVal_target;
+	  error_right = diff2 - pwmVal_target;
+
+	  if(abs(error_left) > 500) error_left = (int16_t) error_left / 30;
+	  else if(abs(error_left) > 250) error_left = (int16_t) error_left / 20;
+	  else if(abs(error_left) > 150) error_left = (int16_t) error_left / 15;
+	  else if(abs(error_left) > 100) error_left = (int16_t) error_left / 10;
+	  else if(abs(error_left) > 50) error_left = (int16_t) error_left / 15;
+	  else if(abs(error_left) > 25) error_left = (int16_t) error_left / 10;
+	  else if(abs(error_left) > 10) error_left = (int16_t) error_left / 8;
+	  else if(abs(error_left) > 5) error_left = (int16_t) error_left / 3;
+	  else error_left = (int16_t) error_left / 2;
+
+	  if(abs(error_right) > 500) error_right = (int16_t) error_right / 30;
+	  else if(abs(error_right) > 250) error_right = (int16_t) error_right / 20;
+	  else if(abs(error_right) > 150) error_right = (int16_t) error_right / 15;
+	  else if(abs(error_right) > 100) error_right = (int16_t) error_right / 10;
+	  else if(abs(error_right) > 50) error_right = (int16_t) error_right / 15;
+	  else if(abs(error_right) > 25) error_right = (int16_t) error_right / 10;
+	  else if(abs(error_right) > 10) error_right = (int16_t) error_right / 8;
+	  else if(abs(error_right) > 5) error_right = (int16_t) error_right / 3;
+	  else error_right = (int16_t) error_right / 2;
+
+	  pwm_left = pwm_left - error_left;
+	  pwm_right = pwm_right - error_right;
+
+	  __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, pwm_left);
+	  __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, pwm_right);
+    osDelay(200);
+*/
 }
 
 /* USER CODE BEGIN Header_encoder_task */
