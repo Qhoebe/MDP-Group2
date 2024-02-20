@@ -97,7 +97,7 @@ void encoder_task(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t aRxBuffer[20];
+uint8_t aRxBuffer[1000];
 /* USER CODE END 0 */
 
 /**
@@ -135,7 +135,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   OLED_Init();
 
-  HAL_UART_Receive_IT(&huart3,(uint8_t *) aRxBuffer,10);
+  HAL_UART_Receive_IT(&huart3,(uint8_t *) aRxBuffer,1000); //10 is the size of the buffer, edit it or manipulate it for more input commands
 
   /* USER CODE END 2 */
 
