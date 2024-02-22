@@ -99,7 +99,7 @@ void showOLED(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t UART_buffer;
+uint8_t UART_buffer[1];
 /* USER CODE END 0 */
 
 /**
@@ -571,7 +571,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 {
 	UNUSED(huart);
 
-	HAL_UART_Transmit(&huart3, (uint8_t *) UART_buffer, 1, 0xFFFF);
+	OLED_ShowString(10,50,UART_buffer);
+	if(UART_buffer[0] == 'a'){
+		center();
+	}
+	if(UART_buffer[0] == 'b') right();
+	if(UART_buffer[0] == 'c') left();
+	HAL_UART_Receive_IT(&huart3, (uint8_t *) UART_buffer, 1);
 }
 
 
@@ -584,7 +590,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
  * @parameters   None
  * @return       None
  */
-int16_t pwmVal_target = 1000;
+int16_t pwmVal_targetLeft  = 1000;
+int16_t pwmVal_targetRight = 1000;
 
 int16_t error_left = 0, error_right = 0;
 int16_t pwmVal_left, pwmVal_right;
@@ -593,11 +600,27 @@ int16_t cnt1,cnt2,diff1;
 int16_t cnt3,cnt4,diff2;
 uint32_t tick;
 
+void stop(void){
+	pwmVal_targetLeft = 0;
+	pwmVal_targetRight = 0;
+	pwmVal_left   = 0;
+	pwmVal_right  = 0;
+
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, pwmVal_left);
+	__HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, pwmVal_right);
+	osDelay(500);
+}
+
 void center(void)
 {
-	if(htim1.Instance->CCR4 < 100) htim1.Instance->CCR4 = 153;
-	else if(htim1.Instance->CCR4 > 200) htim1.Instance->CCR4 = 140;
-	//else htim1.Instance->CCR4 = 140;
+
+	pwmVal_targetLeft = 1000;
+	pwmVal_targetRight = 1000;
+	pwmVal_left   = (int16_t) pwmVal_targetLeft*82/100;
+	pwmVal_right  = (int16_t) pwmVal_targetRight*82/100;
+
+	if(htim1.Instance->CCR4 < 100) htim1.Instance->CCR4 = 162;
+	else htim1.Instance->CCR4 = 140;
 }
 
 void center_balance(){
@@ -607,16 +630,24 @@ void center_balance(){
 
 void left(void)
 {
-	if(htim1.Instance->CCR4 > 200) htim1.Instance->CCR4 = 137;
+	pwmVal_targetLeft = 300;
+	pwmVal_targetRight = 1000;
+	pwmVal_left   = 30;
+	pwmVal_right  = (int16_t) pwmVal_targetRight*82/100;
+
 	osDelay(200);
 	htim1.Instance->CCR4 = 80;
 }
 
 void right(void)
 {
-	if(htim1.Instance->CCR4 < 100) htim1.Instance->CCR4 = 260;
+	pwmVal_targetLeft = 1000;
+	pwmVal_targetRight = 300;
+	pwmVal_left   = (int16_t) pwmVal_targetLeft*82/100;
+	pwmVal_right  = 30;
+
 	osDelay(200);
-	htim1.Instance->CCR4 = 220;
+	htim1.Instance->CCR4 = 250;
 }
 
 /*
@@ -632,6 +663,7 @@ int16_t abs(int16_t num)
 }
 
 /*================================================ SELF DEFINE FUNCTION CODE ===============================================*/
+
 
 /* USER CODE END 4 */
 
@@ -649,10 +681,11 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  if(ch < 'Z') ch++;
+	  if(ch < 'Z')ch++;
 	  else ch = 'A';
+	  //OLED_ShowString(10,50,UART_buffer);
 	  HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, 0xFFFF);
-    osDelay(1);
+    osDelay(1000);
   }
   /* USER CODE END 5 */
 }
@@ -691,36 +724,30 @@ void motors(void *argument)
 
 	*/
 
-	pwmVal_target = 1000;
-	pwmVal_left   = (int16_t) pwmVal_target*82/100;
-	pwmVal_right  = (int16_t) pwmVal_target*82/100;
-	diff1         = pwmVal_target;
-	diff2         = pwmVal_target;
+	diff1         = pwmVal_targetLeft;
+	diff2         = pwmVal_targetRight;
 
-
-	right();
-	osDelay(100);
 	center();
-	osDelay(1000);
 
   /* Infinite loop */
   for(;;)
   {
-	  //Testing servo motor
 	  /*
-	  //htim1.Instance->CCR4 = 220; //extreme right
-	  right();
-	  osDelay(3000);
-	  //htim1.Instance->CCR4 = 137; //center
-	  center();
-	  osDelay(3000);
-	  //htim1.Instance->CCR4 = 80; //extreme left
-	  left();
-	  osDelay(3000);
-	  //htim1.Instance->CCR4 = 153; //center
-	  center();
-	  osDelay(3000);
-
+	  switch(command[command_i]){
+				case '1':
+					center();
+				case '2':
+					left();
+				case '3':
+					right();
+				case '5':
+					stop();
+				case '6':
+					break;
+				default:
+					command_i=0;
+	  }
+	  if(command[command_i++] == '1') center_balance();
 	  */
 
 	  /* Moving forward on both wheels */
@@ -730,13 +757,9 @@ void motors(void *argument)
 	  HAL_GPIO_WritePin(GPIOA,BIN2_Pin, GPIO_PIN_RESET);//forward
 	  HAL_GPIO_WritePin(GPIOA,BIN1_Pin, GPIO_PIN_SET);
 
-
-	  for(int i = 0;i <= 20 ;i++){
 	  /* calculate error */
-	  error_left   = diff1 - pwmVal_target;
-	  error_right  = diff2 - pwmVal_target;
-
-	  center_balance();
+	  error_left   = diff1 - pwmVal_targetLeft;
+	  error_right  = diff2 - pwmVal_targetRight;
 
 	  if(abs(error_left) > 500) error_left = (int16_t) (error_left/30);
 	  else if(abs(error_left) > 250) error_left = (int16_t) (error_left/20);
@@ -763,24 +786,16 @@ void motors(void *argument)
 	  pwmVal_left  = pwmVal_left  - error_left;
 	  pwmVal_right = pwmVal_right - error_right;
 
+	  if(pwmVal_left < 0)pwmVal_left = 10;
+	  if(pwmVal_right <0) pwmVal_right = 10;
+
 
 
 	  __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_1, pwmVal_left);
 	  __HAL_TIM_SetCompare(&htim8, TIM_CHANNEL_2, pwmVal_right);
 
 	  osDelay(250);
-	  }
-	  /*
-	  osDelay(1500);
 
-	  right();
-
-	  for(int i = 0; i<= 20 ;i++){
-		  osDelay(250);
-	  }
-
-	  osDelay(250);
-	  */
   }
   /* USER CODE END motors */
 }
@@ -838,9 +853,9 @@ void encoder(void *argument)
 				//dir = __HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2);
 				sprintf(another, "Speed 2:%5d\0", diff2);
 				OLED_ShowString(10,20,another);
-				sprintf(another, "pwmLeft 1:%5d\0", pwmVal_right);
+				sprintf(another, "pwmRight:%5d\0", pwmVal_right);
 				OLED_ShowString(10,30,another);
-				sprintf(another, "pwmLeft 2:%5d\0", pwmVal_left);
+				sprintf(another, "pwmLeft:%5d\0", pwmVal_left);
 				OLED_ShowString(10,40,another);
 				cnt1 = __HAL_TIM_GET_COUNTER(&htim2);
 				cnt3 = __HAL_TIM_GET_COUNTER(&htim3);
@@ -858,6 +873,7 @@ void encoder(void *argument)
 * @retval None
 */
 /* USER CODE END Header_showOLED */
+
 void showOLED(void *argument)
 {
   /* USER CODE BEGIN showOLED */
