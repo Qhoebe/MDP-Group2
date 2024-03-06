@@ -1,6 +1,7 @@
 import time
 from algo import MazeSolver 
 from task2 import TrackSolver
+from task21 import TrackSolver1
 from helper import command_generator
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -80,7 +81,8 @@ def path_finding():
 
 # task2
 
-solver = TrackSolver(25)
+#solver = TrackSolver(25)
+solver = TrackSolver1(25)
 
 @app.route('/route1', methods=['POST'])
 def task2_route1():
