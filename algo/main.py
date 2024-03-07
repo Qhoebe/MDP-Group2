@@ -121,7 +121,97 @@ def task2_route2():
     return jsonify({'commands':commands,
                     'error':error})
 
+@app.route('/path1_d', methods=['POST'])
+def task2_path1_d():
+    global solver
+    # get request content
+    content = request.json
 
+    # calculate path and provide commands
+    solver.add_distance1(content['distance1'])
+    commands = solver.calc_path1_d()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+
+@app.route('/path1_o', methods=['POST'])
+def task2_path1_o():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_arrow1(content['arrow1'])
+    commands = solver.calc_path1_o()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+@app.route('/path2_d', methods=['POST'])
+def task2_path2_d():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_distance2(content['distance2'])
+    commands = solver.calc_path2_d()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+
+@app.route('/path2_o', methods=['POST'])
+def task2_path2_o():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_arrow2(content['arrow2'])
+    commands = solver.calc_path2_o()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+@app.route('/path3', methods=['POST'])
+def task3_path3():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_distance3(content['distance3'])
+    commands = solver.calc_path3()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
 
 
