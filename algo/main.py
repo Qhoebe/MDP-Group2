@@ -31,6 +31,11 @@ def path_finding():
     content =  request.json 
     #content =  details
 
+    content["robot_x"] = 1
+    content["robot_y"] = 2
+    content["robot_dir"] = 0
+    content["retrying"] = True
+
     # Get the obstacles, big_turn, retrying, robot_x, robot_y, and robot_direction from the json data
     obstacles = content['obstacles']
     # big_turn = int(content['big_turn'])
