@@ -1,7 +1,7 @@
 import time
 from algo import MazeSolver 
 from task2 import TrackSolver
-from task21 import TrackSolver1
+#from task21 import TrackSolver1
 from helper import command_generator
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -70,19 +70,28 @@ def path_finding():
         else:
             i += 1
         path_results.append(optimal_path[i].get_dict())
+
+    stm_commands = []
+    for command in commands:
+        if command.startswith("FIN"):
+            continue
+        stm_commands.append(command)
+        stm_commands.append("DL")
+
     return jsonify({
         "data": {
             'distance': distance,
             'path': path_results,
-            'commands': commands
+            'commands': stm_commands,
+            'commands_sim': commands
         },
         "error": None
     })
 
 # task2
 
-#solver = TrackSolver(25)
-solver = TrackSolver1(25)
+solver = TrackSolver(25)
+#solver = TrackSolver1(25)
 
 @app.route('/route1', methods=['POST'])
 def task2_route1():
@@ -218,7 +227,7 @@ def task3_path3():
 
 
 if __name__ == '__main__':
-    app.run(port=5000,debug=True)
+    app.run(port=5001,debug=True)
 
     # prepare task_2
     
