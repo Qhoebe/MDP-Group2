@@ -43,10 +43,10 @@ import java.util.UUID;
 public class BluetoothFragment extends Fragment {
     private static final String TAG = "BluetoothFragment";
 
-    private BluetoothAdapter bluetoothAdapter;
-    private boolean bluetoothOn;
+    private BluetoothAdapter btAdapter;
+    private boolean btOn;
 
-    //ui
+
     private Button btnToggleBluetooth;
     private Button btnSearchBluetooth;
     private BluetoothDiscoveredListViewAdapter discoveredDevicesAdapter;
@@ -54,45 +54,36 @@ public class BluetoothFragment extends Fragment {
     private BluetoothPairedListViewAdapter pairedDevicesAdapter;
     private List<String> pairedDevicesAdapterData;
 
-    //Data
+
     private HashMap<String, BluetoothDevice> pairedDevices;
     private HashMap<String, BluetoothDevice> discoveredDevices;
 
-    //Bluetooth Connection
-    private BluetoothConnectionService bluetoothConnectionService;
+
+    private BluetoothConnectionService btConnectionService;
     private static final UUID MY_UUID_INSECURE =
-            UUID.fromString("49930a2c-04f6-4fe6-beb7-688360fc5995");
+            UUID.fromString("b223f3ef-cd76-44f5-8483-afa54eb791d3");
     private boolean retryConnection = false;
     private String curDeviceAddress;
     private Handler reconnectionHandler = new Handler();
     private Button curConnectionBtn;
 
-    //Auxiliary Functions
+
     private boolean initializedBCastReceivers = false;
 
-    //TEMPORARY FOR USE TO TEST BT CONNECTION
+
     Button sendMsgBtn;
     TextView receivedTextView;
     EditText txtMsgToSend;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
+
     private String mParam1;
     private String mParam2;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment BluetoothFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+
     public static BluetoothFragment newInstance(String param1, String param2) {
         BluetoothFragment fragment = new BluetoothFragment();
         Bundle args = new Bundle();
@@ -103,7 +94,7 @@ public class BluetoothFragment extends Fragment {
     }
 
     public BluetoothFragment() {
-        bluetoothOn = false;
+        btOn = false;
     }
 
     @Override
@@ -114,19 +105,15 @@ public class BluetoothFragment extends Fragment {
         pairedDevices = new HashMap<String, BluetoothDevice>();
         pairedDevicesAdapterData = new ArrayList<>();
 
-        //TO FIX: This is being called multiple times everytime we click onto this view
-        //It is breaking the bt connection
-
-        //Intent Filter for pairing devices
         IntentFilter btPairingFilter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         getActivity().registerReceiver(btPairingReceiver, btPairingFilter);
 
-        if(bluetoothConnectionService == null){
-            bluetoothConnectionService = new BluetoothConnectionService(getContext());
+        if(btConnectionService == null){
+           btConnectionService = new BluetoothConnectionService(getContext());
         }
 
         if(!initializedBCastReceivers){
-            //Intent Filter for received messages
+
             LocalBroadcastManager.getInstance(getContext()).registerReceiver(bluetoothMsgReceiver, new IntentFilter("incomingBTMessage"));
             LocalBroadcastManager.getInstance(getContext()).registerReceiver(sendBluetoothReceiver, new IntentFilter("sendBTMessage"));
             LocalBroadcastManager.getInstance(getContext()).registerReceiver(btConnectionUpdateReceiver, new IntentFilter("connectionBTStatus"));
@@ -160,14 +147,14 @@ public class BluetoothFragment extends Fragment {
 
         initializeBluetooth();
 
-        //TEMPORARY FOR BT TEXTING
+
         sendMsgBtn = (Button) rootView.findViewById(R.id.temp_btnsend);
         receivedTextView = (TextView) rootView.findViewById(R.id.temp_btreceivedmsgs);
         txtMsgToSend = (EditText) rootView.findViewById(R.id.temp_msginput);
 
         sendMsgBtn.setOnClickListener(v -> {
             byte[] bytes = txtMsgToSend.getText().toString().getBytes(Charset.defaultCharset());
-            bluetoothConnectionService.write(bytes);
+            btConnectionService.write(bytes);
             txtMsgToSend.setText("");
         });
         return rootView;
@@ -178,31 +165,20 @@ public class BluetoothFragment extends Fragment {
         super.onDestroy();
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        try{
-//            getContext().unregisterReceiver(btDiscoveryReceiver);
-//            getContext().unregisterReceiver(btPairingReceiver);
-        }catch (Exception e){
-            Log.e(TAG, "onPause: An error occured while deregistering receivers");
-            e.printStackTrace();
-        }
-    }
 
     private void initializeBluetooth() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            showShortToast("Bluetooth not supported");
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (btAdapter == null) {
+            showShortToast("Bluetooth is not supported");
             return;
         }
 
         btnToggleBluetooth.setEnabled(true);
-        if (bluetoothAdapter.isEnabled()) {
-            bluetoothOn = true;
+        if (btAdapter.isEnabled()) {
+            btOn = true;
         }
 
-        Set<BluetoothDevice> paired = bluetoothAdapter.getBondedDevices();
+        Set<BluetoothDevice> paired = btAdapter.getBondedDevices();
         for (BluetoothDevice device : paired) {
             if (!pairedDevices.containsKey(device.getAddress())) {
                 pairedDevices.put(device.getAddress(), device);
@@ -215,23 +191,22 @@ public class BluetoothFragment extends Fragment {
     }
 
     private void toggleBluetooth() {
-        //Toggle the status
-        bluetoothOn = !bluetoothOn;
-        if (bluetoothOn) {
-            bluetoothAdapter.enable();
+        btOn = !btOn;
+        if (btOn) {
+            btAdapter.enable();
         } else {
-            bluetoothAdapter.disable();
+            btAdapter.disable();
         }
         updateBluetoothControlButtons();
     }
 
     private void searchBluetooth() {
-        if (bluetoothOn) {
+        if (btOn) {
             discoveredDevices.clear();
             discoveredDevicesAdapter.clear();
 
-            if (bluetoothAdapter.isDiscovering()) {
-                bluetoothAdapter.cancelDiscovery();
+            if (btAdapter.isDiscovering()) {
+                btAdapter.cancelDiscovery();
             }
 
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
@@ -239,7 +214,7 @@ public class BluetoothFragment extends Fragment {
             startActivity(discoverableIntent);
 
             checkLocationPermission();
-            bluetoothAdapter.startDiscovery();
+            btAdapter.startDiscovery();
 
             IntentFilter filter = new IntentFilter();
             filter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -247,8 +222,8 @@ public class BluetoothFragment extends Fragment {
             filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
             getContext().registerReceiver(btDiscoveryReceiver, filter);
         } else {
-            showShortToast("Enable bluetooth first");
-            Log.d(TAG, "Tried to discover wtihout bluetooth enabled");
+            showShortToast("Please enable bluetooth first");
+            Log.d(TAG, "Tried to discover without bluetooth enabled");
         }
     }
 
@@ -257,23 +232,23 @@ public class BluetoothFragment extends Fragment {
             String action = intent.getAction();
 
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
-                //discovery starts, we can show progress dialog or perform other tasks
+
                 showShortToast("Discovering Devices");
 
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                //discovery finishes, dismis progress dialog
+
                 showShortToast("Discovery Ended");
 
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                //bluetooth device found
+
                 BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device != null) {
                     String deviceName = device.getName();
                     String deviceAddress = device.getAddress();
 
-                    //Do not add if device previously discovered
+
                     if (discoveredDevices.containsKey(deviceAddress)) return;
-                    //Do not add if device paired
+
                     if(pairedDevices.containsKey(deviceAddress)) return;
 
                     discoveredDevices.put(deviceAddress, device);
@@ -292,17 +267,16 @@ public class BluetoothFragment extends Fragment {
 
             if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                 BluetoothDevice mDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                //3 cases:
-                //case1: bonded already
+
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
                     Log.d(TAG, "BroadcastReceiver: BOND_BONDED.");
                     setPaired(mDevice);
                 }
-                //case2: creating a bone
+
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
                     Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
                 }
-                //case3: breaking a bond
+
                 if (mDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                     Log.d(TAG, "BroadcastReceiver: BOND_NONE.");
                 }
@@ -312,7 +286,7 @@ public class BluetoothFragment extends Fragment {
 
 
     private void updateBluetoothControlButtons() {
-        if (bluetoothOn) {
+        if (btOn) {
             btnToggleBluetooth.setText("Bluetooth: ON");
             btnSearchBluetooth.setEnabled(true);
         } else {
@@ -334,11 +308,11 @@ public class BluetoothFragment extends Fragment {
     }
 
     private void disconnectBluetooth(){
-        bluetoothConnectionService.disconnect();
+        btConnectionService.disconnect();
     }
 
     private boolean connectBluetooth(String macAddress) {
-        //TODO: Logic to connect bluetooth
+
         showShortToast("Connect to: " + macAddress);
         BluetoothDevice btDevice = pairedDevices.get(macAddress);
         if(btDevice == null){
@@ -346,11 +320,11 @@ public class BluetoothFragment extends Fragment {
             return false;
         }
         try{
-            bluetoothConnectionService.startClient(btDevice);
+            btConnectionService.startClient(btDevice);
             curDeviceAddress = macAddress;
             return true;
         }catch(Exception e){
-            showShortToast("An error occured while attempting to start connection");
+            showShortToast("An error occurred while attempting to start connection");
             e.printStackTrace();
             return false;
         }
@@ -358,7 +332,6 @@ public class BluetoothFragment extends Fragment {
 
     private void pairBluetooth(String macAddress) {
         try {
-//            String macAddress = btDeviceLVItem.getAddress();
             if (pairedDevices.containsKey(macAddress)) {
                 Log.d(TAG, "Pair bluetooth: Device " + macAddress + " is already paired");
                 return;
@@ -373,7 +346,7 @@ public class BluetoothFragment extends Fragment {
                 Log.d(TAG, "Trying to pair with " + macAddress);
                 boolean bonded = device.createBond();
                 if (!bonded) {
-                    Log.e(TAG, "An error occured while trying to pair with device " + macAddress);
+                    Log.e(TAG, "An error occurred while trying to pair with device " + macAddress);
                 }
             }
         } catch (Exception e) {
@@ -431,6 +404,36 @@ public class BluetoothFragment extends Fragment {
             });
             return convertView;
         }
+    }
+
+    private Runnable reconnectRunnable =new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if(!BluetoothConnectionService.isConnected && retryConnection){
+                    connectBluetooth(curDeviceAddress);
+                }
+                reconnectionHandler.removeCallbacks(reconnectRunnable);
+            }catch (Exception e){
+                Log.e(TAG, "run: An error occurred while running reconnectRunnable");
+                showShortToast("Error reconnecting, retrying in 5s");
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private void showShortToast(String msg) {
+        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    private void showLongToast(String msg) {
+        Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void sendIntent(String intentAction, String content){
+        Intent sendingIntent = new Intent(intentAction);
+        sendingIntent.putExtra("msg", content);
+        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(sendingIntent);
     }
 
     private class BluetoothPairedListViewAdapter extends ArrayAdapter<String> {
@@ -519,9 +522,9 @@ public class BluetoothFragment extends Fragment {
             String msg = intent.getStringExtra("msg");
             try{
                 byte[] msgInBytes = msg.getBytes(Charset.defaultCharset());
-                bluetoothConnectionService.write(msgInBytes);
+                btConnectionService.write(msgInBytes);
             }catch(Exception e){
-                Log.e(TAG,"An error occured while sending bluetooth message");
+                Log.e(TAG,"An error occurred while sending bluetooth message");
                 e.printStackTrace();
             }
         }
@@ -546,39 +549,11 @@ public class BluetoothFragment extends Fragment {
                         break;
                 }
             }catch (Exception e){
-                Log.e(TAG, "onReceive: An error occured while trying to auto reconnect bluetooth");
+                Log.e(TAG, "onReceive: An error occurred while trying to auto reconnect bluetooth");
                 e.printStackTrace();
             }
         }
     };
 
-    private Runnable reconnectRunnable =new Runnable() {
-        @Override
-        public void run() {
-            try {
-                if(!BluetoothConnectionService.isConnected && retryConnection){
-                    connectBluetooth(curDeviceAddress);
-                }
-                reconnectionHandler.removeCallbacks(reconnectRunnable);
-            }catch (Exception e){
-                Log.e(TAG, "run: An error occured while running reconnectRunnable");
-                showShortToast("Error reconnecting, retrying in 5s");
-                e.printStackTrace();
-            }
-        }
-    };
 
-    private void showShortToast(String msg) {
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
-    }
-
-    private void showLongToast(String msg) {
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
-    }
-
-    private void sendIntent(String intentAction, String content){
-        Intent sendingIntent = new Intent(intentAction);
-        sendingIntent.putExtra("msg", content);
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(sendingIntent);
-    }
 }

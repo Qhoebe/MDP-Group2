@@ -84,14 +84,14 @@
                     android:layout_weight="8"
                     android:ems="10"
                     android:inputType="textPersonName"
-                    android:text="Name" />
+                    android:text="Text" />
 
                 <Button
                     android:id="@+id/temp_btnsend"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
-                    android:text="Button" />
+                    android:text="Send" />
             </LinearLayout>
         </LinearLayout>
 
