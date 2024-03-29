@@ -1,9 +1,9 @@
 import time
-import requests
-import json
 from algo import MazeSolver 
+from task2 import TrackSolver
+#from task21 import TrackSolver1
 from helper import command_generator
-from flask import Flask, request, jsonify, render_template,url_for,redirect
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from entities.Entity import Direction
 
@@ -30,6 +30,11 @@ def path_finding():
     # Get the json data from the request
     content =  request.json 
     #content =  details
+
+    content["robot_x"] = 1
+    content["robot_y"] = 2
+    content["robot_dir"] = 0
+    content["retrying"] = True
 
     # Get the obstacles, big_turn, retrying, robot_x, robot_y, and robot_direction from the json data
     obstacles = content['obstacles']
@@ -70,145 +75,167 @@ def path_finding():
         else:
             i += 1
         path_results.append(optimal_path[i].get_dict())
+
+    stm_commands = []
+    for command in commands:
+        if command.startswith("FIN"):
+            continue
+        stm_commands.append(command)
+        stm_commands.append("DL")
+
     return jsonify({
         "data": {
             'distance': distance,
             'path': path_results,
-            'commands': commands
+            'commands': stm_commands,
+            'commands_sim': commands
         },
         "error": None
     })
 
+# task2
 
-# Code Section for Simulator
+solver = TrackSolver(25)
+#solver = TrackSolver1(25)
 
-# global variables
-Direction = {
-  "NORTH": 0,
-  "EAST": 2,
-  "SOUTH": 4,
-  "WEST": 6,
-  "SKIP": 8,
-}
-obstacles = []  # This list will store your obstacles
-default_robot = {'x':1,'y':1,'d':0,'s':-1}
-robot = {'x':1,'y':1,'d':0,'s':-1}
-counter = 0
-path = []
-commands = []
-position = 0
+@app.route('/route1', methods=['POST'])
+def task2_route1():
+    global solver
+    # get request content
+    content = request.json
 
-@app.route('/')
-def hello():
-    return render_template('hello.html')
-
-@app.route('/simulator')
-def simulator():
-    return render_template('simulator.html',obstacles = obstacles, robot=robot,path=path,commands=commands,position = position)
-
-@app.route('/add/obstacle', methods=['POST'])
-def add_obstacle():
-    global path
-    global commands
-    global position
-    x = int(request.form.get('x'))
-    y = int(request.form.get('y'))
-    direction = int(request.form.get('direction'))
-    obstacle = {'x': x, 'y':y, 'd':direction}
-    if is_unique_obstacle(obstacle, obstacles):
-        obstacles.append(obstacle)
-        # reset grid. 
-        commands = []
-        path = []
-        position = 0
-
-    return redirect(url_for('simulator'))
-
-def is_unique_obstacle(obstacle,obstacles):
-    for obs in obstacles: 
-        if obs['y'] == obstacle['y'] and obs['x'] == obstacle['x']:
-            return False
-    return True
-
-@app.route('/delete/obstacle/<obstacle_json>')
-def delete_obstacle(obstacle_json):
-    global path
-    global commands
-    global position
-    obstacle = json.loads(obstacle_json)
-    if obstacle in obstacles: 
-        obstacles.remove(obstacle)
-        # reset path
-        path = []
-        commands = []
-        position = 0
-    return redirect(url_for('simulator'))
-
-@app.route('/prev_step')
-def prev_step():
-    global robot
-    global position
-    if position > 0: 
-        position -= 1
-        robot = path[position]
-    return redirect(url_for('simulator'))
-
-@app.route('/next_step')
-def next_step():
-    global robot
-    global position
-    if position < len(path): 
-        position += 1
-        robot = path[position]
-    return redirect(url_for('simulator'))
-
-@app.route('/shortestpath')
-def shortest_path():
-    global position
-    global path
-    global commands
-    global robot
-
-    # create request json
-    details = {}
-    details['robot_x'] = robot['x']
-    details['robot_y'] = robot['y']
-    details['robot_dir'] = robot['d']
-    details['retrying'] = True
-    details['obstacles'] = obstacles.copy()
-    for i in range(len(obstacles)):
-       details['obstacles'][i]['id'] = i+1
-
-    # retrieve response
-    response = requests.post(" http://127.0.0.1:5000/path", json = details)
-        
-    result = response.json()
-
-    # update info on simulator
-    path = result['data']['path'].copy()
-    commands = result['data']['commands'].copy()
-    for command in commands: 
-        if "SNAP" in command: 
-            commands.remove(command)
-    commands.insert(0,"ST")
-    position = 0
-    robot = path[0]
-    # display from step 0.
+    # calculate path and provide commands
+    solver.add_arrow1(content['arrow1'])
+    solver.add_distance1(content['distance1'])
+    commands = solver.calc_path1()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
     
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
-    return redirect(url_for('simulator'))
+
+@app.route('/route2', methods=['POST'])
+def task2_route2():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_arrow2(content['arrow2'])
+    solver.add_distance2(content['distance2'])
+    commands = solver.calc_path2()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
     
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+@app.route('/path1_d', methods=['POST'])
+def task2_path1_d():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_distance1(content['distance1'])
+    commands = solver.calc_path1_d()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
 
+@app.route('/path1_o', methods=['POST'])
+def task2_path1_o():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_arrow1(content['arrow1'])
+    commands = solver.calc_path1_o()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
+
+@app.route('/path2_d', methods=['POST'])
+def task2_path2_d():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_distance2(content['distance2'])
+    commands = solver.calc_path2_d()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
 
+@app.route('/path2_o', methods=['POST'])
+def task2_path2_o():
+    global solver
+    # get request content
+    content = request.json
 
+    # calculate path and provide commands
+    solver.add_arrow2(content['arrow2'])
+    commands = solver.calc_path2_o()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
+@app.route('/path3', methods=['POST'])
+def task3_path3():
+    global solver
+    # get request content
+    content = request.json
+
+    # calculate path and provide commands
+    solver.add_distance3(content['distance3'])
+    commands = solver.calc_path3()
+    if commands is None: 
+        error = True
+    else: 
+        error = False
+    
+    print(commands)
+    return jsonify({'commands':commands,
+                    'error':error})
 
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=5001,debug=True)
 
-    # path_finding(details)
+    # prepare task_2
+    
+
+
 

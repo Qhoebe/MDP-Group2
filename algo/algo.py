@@ -7,7 +7,9 @@ from entities.Entity import Obstacle, CellState, Grid
 from consts import Direction, MOVE_DIRECTION, TURN_FACTOR, ITERATIONS, TURN_RADIUS, SAFE_COST
 from python_tsp.exact import solve_tsp_dynamic_programming
 
-turn_wrt_big_turns = [[3 * TURN_RADIUS, TURN_RADIUS],
+from multiprocessing import Pool
+
+turn_wrt_big_turns = [[3 * TURN_RADIUS, 2 * TURN_RADIUS],
                   [4 * TURN_RADIUS, 2 * TURN_RADIUS]]
 
 
@@ -106,6 +108,47 @@ class MazeSolver:
         s.sort(key=lambda x: x.count('1'), reverse=True)
         return s
 
+    def worker(self, args):
+        c, items, cur_view_positions, distance = args
+        visited_candidates = [0] # add the start state of the robot
+        cur_index = 1
+        fixed_cost = 0 # the cost applying for the position taking obstacle pictures
+        for index, view_position in enumerate(cur_view_positions):
+            visited_candidates.append(cur_index + c[index])
+            fixed_cost += view_position[c[index]].penalty
+            cur_index += len(view_position)
+        
+        cost_np = np.zeros((len(visited_candidates), len(visited_candidates)))
+
+        for s in range(len(visited_candidates) - 1):
+            for e in range(s + 1, len(visited_candidates)):
+                u = items[visited_candidates[s]]
+                v = items[visited_candidates[e]]
+                if (u, v) in self.cost_table.keys():
+                    cost_np[s][e] = self.cost_table[(u, v)]
+                else:
+                    cost_np[s][e] = 1e9
+                cost_np[e][s] = cost_np[s][e]
+        cost_np[:, 0] = 0
+        _permutation, _distance = solve_tsp_dynamic_programming(cost_np)
+        if _distance + fixed_cost >= distance:
+            return None
+
+        optimal_path = [items[0]]
+        distance = _distance + fixed_cost
+
+        for i in range(len(_permutation) - 1):
+            from_item = items[visited_candidates[_permutation[i]]]
+            to_item = items[visited_candidates[_permutation[i + 1]]]
+
+            cur_path = self.path_table[(from_item, to_item)]
+            for j in range(1, len(cur_path)):
+                optimal_path.append(CellState(cur_path[j][0], cur_path[j][1], cur_path[j][2]))
+
+            optimal_path[-1].set_screenshot(to_item.screenshot_id)
+        
+        return optimal_path, distance
+
     def get_optimal_order_dp(self, retrying) -> List[CellState]:
         distance = 1e9
         optimal_path = []
@@ -145,50 +188,14 @@ class MazeSolver:
             combination = []
             self.generate_combination(cur_view_positions, 0, [], combination, [ITERATIONS])
 
-            for c in combination: # run the algo some times ->
-                visited_candidates = [0] # add the start state of the robot
-
-                cur_index = 1
-                fixed_cost = 0 # the cost applying for the position taking obstacle pictures
-                for index, view_position in enumerate(cur_view_positions):
-                    visited_candidates.append(cur_index + c[index])
-                    fixed_cost += view_position[c[index]].penalty
-                    cur_index += len(view_position)
-                
-                cost_np = np.zeros((len(visited_candidates), len(visited_candidates)))
-
-                for s in range(len(visited_candidates) - 1):
-                    for e in range(s + 1, len(visited_candidates)):
-                        u = items[visited_candidates[s]]
-                        v = items[visited_candidates[e]]
-                        if (u, v) in self.cost_table.keys():
-                            cost_np[s][e] = self.cost_table[(u, v)]
-                        else:
-                            cost_np[s][e] = 1e9
-                        cost_np[e][s] = cost_np[s][e]
-                cost_np[:, 0] = 0
-                _permutation, _distance = solve_tsp_dynamic_programming(cost_np)
-                # print(f"fixed_cost = {fixed_cost}")
-                # print(f"distance = {_distance}")
-                if _distance + fixed_cost >= distance:
-                    continue
-
-                optimal_path = [items[0]]
-                distance = _distance + fixed_cost
-
-                for i in range(len(_permutation) - 1):
-                    from_item = items[visited_candidates[_permutation[i]]]
-                    to_item = items[visited_candidates[_permutation[i + 1]]]
-
-                    cur_path = self.path_table[(from_item, to_item)]
-                    for j in range(1, len(cur_path)):
-                        optimal_path.append(CellState(cur_path[j][0], cur_path[j][1], cur_path[j][2]))
-
-                    optimal_path[-1].set_screenshot(to_item.screenshot_id)
-
-            if optimal_path:
-                # if found optimal path, return
-                break
+            with Pool() as p:
+                args = [(c, items, cur_view_positions, distance) for c in combination]
+                results = p.map(self.worker, args)
+                results = [r for r in results if r is not None]
+                if results:
+                    optimal_path, distance = min(results, key=lambda x: x[1])
+                    if optimal_path:  # or any other condition you want to check
+                        break
 
         return optimal_path, distance
 

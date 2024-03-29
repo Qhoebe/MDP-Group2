@@ -65,47 +65,47 @@ def command_generator(states, obstacles):
 
                 # Obstacle facing WEST, robot facing EAST
                 if current_ob_dict['d'] == 6 and current_robot_position.direction == 2:
-                    if current_ob_dict['y'] > current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_L")
-                    elif current_ob_dict['y'] == current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_C")
-                    elif current_ob_dict['y'] < current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_R")
-                    else:
-                        commands.append(f"SNAP{states[i].screenshot_id}")
+                    # if current_ob_dict['y'] > current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                    # elif current_ob_dict['y'] == current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                    # elif current_ob_dict['y'] < current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                    # else:
+                    commands.append(f"SNAP{states[i].screenshot_id}")
                 
                 # Obstacle facing EAST, robot facing WEST
                 elif current_ob_dict['d'] == 2 and current_robot_position.direction == 6:
-                    if current_ob_dict['y'] > current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_R")
-                    elif current_ob_dict['y'] == current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_C")
-                    elif current_ob_dict['y'] < current_robot_position.y:
-                        commands.append(f"SNAP{states[i].screenshot_id}_L")
-                    else:
-                        commands.append(f"SNAP{states[i].screenshot_id}")
+                    # if current_ob_dict['y'] > current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                    # elif current_ob_dict['y'] == current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                    # elif current_ob_dict['y'] < current_robot_position.y:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                    # else:
+                    commands.append(f"SNAP{states[i].screenshot_id}")
 
                 # Obstacle facing NORTH, robot facing SOUTH
                 elif current_ob_dict['d'] == 0 and current_robot_position.direction == 4:
-                    if current_ob_dict['x'] > current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_L")
-                    elif current_ob_dict['x'] == current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_C")
-                    elif current_ob_dict['x'] < current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_R")
-                    else:
-                        commands.append(f"SNAP{states[i].screenshot_id}")
+                    # if current_ob_dict['x'] > current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                    # elif current_ob_dict['x'] == current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                    # elif current_ob_dict['x'] < current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                    # else:
+                    commands.append(f"SNAP{states[i].screenshot_id}")
 
                 # Obstacle facing SOUTH, robot facing NORTH
                 elif current_ob_dict['d'] == 4 and current_robot_position.direction == 0:
-                    if current_ob_dict['x'] > current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_R")
-                    elif current_ob_dict['x'] == current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_C")
-                    elif current_ob_dict['x'] < current_robot_position.x:
-                        commands.append(f"SNAP{states[i].screenshot_id}_L")
-                    else:
-                        commands.append(f"SNAP{states[i].screenshot_id}")
+                    # if current_ob_dict['x'] > current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                    # elif current_ob_dict['x'] == current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                    # elif current_ob_dict['x'] < current_robot_position.x:
+                    #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                    # else:
+                    commands.append(f"SNAP{states[i].screenshot_id}")
             continue
 
         # If previous state and current state are not the same direction, it means that there will be a turn command involved
@@ -121,63 +121,63 @@ def command_generator(states, obstacles):
             if states[i].direction == Direction.EAST:
                 # y value increased -> Forward Right
                 if states[i].y > states[i - 1].y:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
                 # y value decreased -> Backward Left
                 else:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
             # Facing west afterwards
             elif states[i].direction == Direction.WEST:
                 # y value increased -> Forward Left
                 if states[i].y > states[i - 1].y:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
                 # y value decreased -> Backward Right
                 else:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
             else:
-                raise Exception("Invalid turing direction")
+                raise Exception("Invalid turning direction")
 
         elif states[i - 1].direction == Direction.EAST:
             if states[i].direction == Direction.NORTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
                 else:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
 
             elif states[i].direction == Direction.SOUTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
                 else:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
             else:
                 raise Exception("Invalid turing direction")
 
         elif states[i - 1].direction == Direction.SOUTH:
             if states[i].direction == Direction.EAST:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
                 else:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
             elif states[i].direction == Direction.WEST:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
                 else:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
             else:
                 raise Exception("Invalid turing direction")
 
         elif states[i - 1].direction == Direction.WEST:
             if states[i].direction == Direction.NORTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("FR{}".format(steps))
+                    commands.append("FR{}".format(90))
                 else:
-                    commands.append("BL{}".format(steps))
+                    commands.append("BL{}".format(90))
             elif states[i].direction == Direction.SOUTH:
                 if states[i].y > states[i - 1].y:
-                    commands.append("BR{}".format(steps))
+                    commands.append("BR{}".format(90))
                 else:
-                    commands.append("FL{}".format(steps))
+                    commands.append("FL{}".format(90))
             else:
-                raise Exception("Invalid turing direction")
+                raise Exception("Invalid turning direction")
         else:
             raise Exception("Invalid position")
 
@@ -193,47 +193,47 @@ def command_generator(states, obstacles):
 
             # Obstacle facing WEST, robot facing EAST
             if current_ob_dict['d'] == 6 and current_robot_position.direction == 2:
-                if current_ob_dict['y'] > current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_L")
-                elif current_ob_dict['y'] == current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_C")
-                elif current_ob_dict['y'] < current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_R")
-                else:
-                    commands.append(f"SNAP{states[i].screenshot_id}")
+                # if current_ob_dict['y'] > current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                # elif current_ob_dict['y'] == current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                # elif current_ob_dict['y'] < current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                # else:
+                commands.append(f"SNAP{states[i].screenshot_id}")
             
             # Obstacle facing EAST, robot facing WEST
             elif current_ob_dict['d'] == 2 and current_robot_position.direction == 6:
-                if current_ob_dict['y'] > current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_R")
-                elif current_ob_dict['y'] == current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_C")
-                elif current_ob_dict['y'] < current_robot_position.y:
-                    commands.append(f"SNAP{states[i].screenshot_id}_L")
-                else:
-                    commands.append(f"SNAP{states[i].screenshot_id}")
+                # if current_ob_dict['y'] > current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                # elif current_ob_dict['y'] == current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                # elif current_ob_dict['y'] < current_robot_position.y:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                # else:
+                commands.append(f"SNAP{states[i].screenshot_id}")
 
             # Obstacle facing NORTH, robot facing SOUTH
             elif current_ob_dict['d'] == 0 and current_robot_position.direction == 4:
-                if current_ob_dict['x'] > current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_L")
-                elif current_ob_dict['x'] == current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_C")
-                elif current_ob_dict['x'] < current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_R")
-                else:
-                    commands.append(f"SNAP{states[i].screenshot_id}")
+                # if current_ob_dict['x'] > current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                # elif current_ob_dict['x'] == current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                # elif current_ob_dict['x'] < current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                # else:
+                commands.append(f"SNAP{states[i].screenshot_id}")
 
             # Obstacle facing SOUTH, robot facing NORTH
             elif current_ob_dict['d'] == 4 and current_robot_position.direction == 0:
-                if current_ob_dict['x'] > current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_R")
-                elif current_ob_dict['x'] == current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_C")
-                elif current_ob_dict['x'] < current_robot_position.x:
-                    commands.append(f"SNAP{states[i].screenshot_id}_L")
-                else:
-                    commands.append(f"SNAP{states[i].screenshot_id}")
+                # if current_ob_dict['x'] > current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_R")
+                # elif current_ob_dict['x'] == current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_C")
+                # elif current_ob_dict['x'] < current_robot_position.x:
+                #     commands.append(f"SNAP{states[i].screenshot_id}_L")
+                # else:
+                commands.append(f"SNAP{states[i].screenshot_id}")
 
     # Final command is the stop command (FIN)
     commands.append("FIN")  
@@ -261,6 +261,7 @@ def command_generator(states, obstacles):
                 continue
         
         # Otherwise, just add as usual
+        
         compressed_commands.append(commands[i])
 
     return compressed_commands
