@@ -300,9 +300,235 @@ class RaspberryPi:
                 self.stm_link.send(command)
 
             elif command.startswith("WN"):
-                self.stm_link.send(command)
+                self.movement_lock.release()
+                left_arrow = [39]
+                # self.stm_link.send(command)
                 self.android_queue.put(AndroidMessage('status', 'running'))
                 self.android_queue.put(AndroidMessage("info", "Starting robot on fastest car!"))
+                
+                import datetime
+                from gpiozero import DistanceSensor
+                self.dist_threshold=0.2
+                # start_time=datetime.datetime.now()
+
+                
+                
+                #self.stm_link.send("f")
+                
+                # time.sleep(2)
+                
+                # d=100
+                import math
+                self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                d=self.ult_sensor.distance
+                while d>=100000:
+                    self.ult_sensor.close()
+                    self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                    d=self.ult_sensor.distance
+                self.ult_sensor.close()
+                d*=100
+                d-=20
+                dist_first=max(d,0)
+                while d>0:
+                    self.movement_lock.acquire()
+                    if d>90:
+                        self.stm_link.send("FW90")
+                        d-=90
+                    else:
+                        self.stm_link.send("FW"+str(math.floor(d)).zfill(2))
+                        d=0
+                # while d>self.dist_threshold:
+                #     self.movement_lock.acquire()
+                #     self.finish_move=False
+                #     self.stm_link.send("FS90")
+                #     d=self.ult_sensor.distance
+                #     while d>self.dist_threshold and not self.finish_move:
+                #         if d==100000:
+                #             self.ult_sensor.close()
+                #             self.ult_sensor=DistanceSensor(echo=17,trigger=4)
+                #         d=self.ult_sensor.distance
+                #     if d<self.dist_threshold:
+                #         self.stm_link.send("STOP")
+                #     self.movement_lock.acquire()
+                #     self.logger.debug("inside lock")
+                #     self.movement_lock.release()
+                # self.ult_sensor.close()
+                    
+                # horizontal_time_1=(datetime.datetime.now()-start_time).total_seconds()
+                # self.stm_link.send("STOP")
+                
+                result = self.snap_and_rec(obstacle_id=1) #snaps a photo of the obstacles
+
+                if result == 39:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                else:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+
+                #return
+                self.movement_lock.acquire()
+                self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                time.sleep(1.5)
+                d=self.ult_sensor.distance
+                while d>=100000:
+                    self.ult_sensor.close()
+                    self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                    d=self.ult_sensor.distance
+                d*=100
+                self.logger.debug(f"ultra sensor result:{d}")
+                d-=30
+                dist_second=max(d,0)
+                self.movement_lock.release()
+                while d>0:
+                    self.movement_lock.acquire()
+                    if d>90:
+                        self.stm_link.send("FW90")
+                        d-=90
+                    else:
+                        self.stm_link.send("FW"+str(math.floor(d)).zfill(2))
+                        d=0
+                self.ult_sensor.close()
+                #self.stm_link.send("f")
+                
+                # time.sleep(2)
+                #while self.ult_sensor.when_out_of_range:
+                    #pass
+                #horizontal_time_2=(datetime.datetime.now()-start_time2).total_seconds()
+                
+                result = self.snap_and_rec(obstacle_id=1) #snaps a photo of the obstacles
+                #result =1
+                # IR part
+                dist_per_round=20
+                round_count=0
+                if result == 39:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                    while 1:
+                        self.movement_lock.acquire()
+                        self.stm_link.send("IRRR")
+                        self.movement_lock.acquire()
+                        # print(self.IR)
+                        if(self.IR.value == 1):
+                            self.movement_lock.release()
+                            self.movement_lock.acquire()
+                            self.stm_link.send("FW"+str(dist_per_round))
+                            # round_count+=1
+                        else:
+                            self.movement_lock.release()
+                            break
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    while 1:
+                        self.movement_lock.acquire()
+                        self.stm_link.send("IRRR")
+                        self.movement_lock.acquire()
+                        if(self.IR.value == 1):
+                            self.movement_lock.release()
+                            self.movement_lock.acquire()
+                            self.stm_link.send("FW"+str(dist_per_round))
+                            round_count+=1
+                        else:
+                            self.movement_lock.release()
+                            break
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")  
+                else:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")
+                    while 1:
+                        self.movement_lock.acquire()
+                        self.stm_link.send("IRLL")
+                        self.movement_lock.acquire()
+                        if(self.IR.value == 1):
+                            self.movement_lock.release()
+                            self.movement_lock.acquire()
+                            self.stm_link.send("FW"+str(dist_per_round))
+                        else:
+                            self.movement_lock.release()
+                            break
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90") 
+                    while 1:
+                        self.movement_lock.acquire()
+                        self.stm_link.send("IRLL")
+                        self.movement_lock.acquire()
+                        if(self.IR.value == 1):
+                            self.movement_lock.release()
+                            self.movement_lock.acquire()
+                            self.stm_link.send("FW"+str(dist_per_round))
+                            round_count+=1
+                        else:
+                            self.movement_lock.release()
+                            break
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90") 
+                
+                # continue to move back to hub
+                # move a long straight line back to the hub
+                # turn and turn
+                # self.movement_lock.acquire()
+                d=dist_first+dist_second+60
+                while d>0:
+                    self.movement_lock.acquire()
+                    if d>90:
+                        self.stm_link.send("FW90")
+                        d-=90
+                    else:
+                        self.stm_link.send("FW"+str(math.floor(d)).zfill(2))
+                        d=0
+                # self.stm_link.send("FW90")
+                if result == 39:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90") 
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FW"+str(math.ceil(max(round_count*dist_per_round/2-40,0))).zfill(2))
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90")
+                else:
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FL90") 
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FW"+str(math.ceil(max(round_count*dist_per_round/2-40,0))).zfill(2))
+                    self.movement_lock.acquire()
+                    self.stm_link.send("FR90")   
+                
+                # go into the hub
+                self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                d=self.ult_sensor.distance
+                while d>=100000:
+                    self.ult_sensor.close()
+                    self.ult_sensor=DistanceSensor(echo=17,trigger=4,max_distance=1.5)
+                    d=self.ult_sensor.distance
+                self.ult_sensor.close()
+                d *= 100
+                d-=20
+                # self.movement_lock.release()
+                while d>0:
+                    self.movement_lock.acquire()
+                    if d>90:
+                        self.stm_link.send("FW90")
+                        d-=90
+                    else:
+                        self.stm_link.send("FW"+str(math.floor(d)).zfill(2))
+                        d=0
+                return
 
             # snap command (path mode)
             elif command.startswith("SNAP"):
