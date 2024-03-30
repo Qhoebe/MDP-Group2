@@ -1,0 +1,696 @@
+package com.example.androidcontroller;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.webkit.WebHistoryItem;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import static java.lang.String.valueOf;
+
+package com.example.androidcontroller;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
+
+import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+
+public class NavigationView extends View {
+
+    public NavigationView(Context context) {
+        super(context);
+        initialize();
+    }
+
+    private Paint darkPaint = new Paint();
+    private Paint lightPaint = new Paint();
+    private Paint numberPaint = new Paint();
+    private Paint ObstaclePaint = new Paint();
+    private Paint explorerPaint = new Paint();
+    private Paint boundaryPaint = new Paint();
+    private Paint entryPaint = new Paint();
+    private Paint unknownPaint = new Paint();
+    private Paint routePaint = new Paint();
+    private Paint routeConfirmationPaint = new Paint();
+
+    private static ExplorerDirection currentDirection = ExplorerDirection.STILL;
+    private static int[] currentPosition = new int[]{-1, -1};
+    private static ArrayList<int[]> ObstaclePositions = new ArrayList<>();
+    private static boolean automaticRefresh = false;
+    private static boolean drawableExplorer = false;
+    private static boolean entryPointStatus = false;
+    private static boolean ObstacleSettingMode = false;
+    private static boolean directionSettingMode = false;
+
+    private static final String DEBUG_TAG = "NavigationView";
+    private static final int GRID_WIDTH = 20;
+    private static final int GRID_HEIGHT = 20;
+    private static float squareDimension;
+    private static Square[][] squares;
+
+    private static boolean outdoorField = false;
+
+    private boolean hasDrawnMap = false;
+
+    private static int[] chosenObstaclePosition = new int[3];
+    private static boolean ObstacleChosen = false;
+    private static ArrayList<Square> temporarySquares = new ArrayList<>();
+
+    int directionOption = -1;
+    String[] explorerDirections = new String[]{"STILL", "NORTH", "SOUTH", "WEST", "EAST"};
+    private static int[] ObstacleNumbers = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    public NavigationView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        initialize();
+        darkPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        lightPaint.setColor(Color.WHITE);
+        ObstaclePaint.setColor(Color.BLACK);
+        explorerPaint.setColor(Color.CYAN);
+        boundaryPaint.setColor(Color.GRAY);
+        entryPaint.setColor(Color.CYAN);
+        unknownPaint.setColor(Color.LTGRAY);
+        numberPaint.setColor(Color.WHITE);
+        numberPaint.setTextSize(15);
+        numberPaint.setFakeBoldText(true);
+
+        routePaint.setStyle(Paint.Style.STROKE);
+        routePaint.setColor(Color.YELLOW);
+        routePaint.setStrokeWidth(2);
+
+        routeConfirmationPaint.setStyle(Paint.Style.STROKE);
+        routeConfirmationPaint.setColor(Color.YELLOW);
+        routeConfirmationPaint.setStrokeWidth(5);
+    }
+
+    private void initialize() {
+        setWillNotDraw(false);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        logDebug("Entering onDraw");
+        super.onDraw(canvas);
+        logDebug("Refreshing navigation view");
+
+        Log.d(DEBUG_TAG, "Setting up Squares");
+
+        if (!hasDrawnMap) {
+            setupSquares();
+            clearMapView();
+            hasDrawnMap = true;
+        }
+
+        paintEachSquare(canvas);
+        drawGrid(canvas);
+        labelGrid(canvas);
+
+        if (drawableExplorer)
+            drawExplorer(canvas);
+
+        logDebug("Exiting onDraw");
+    }
+
+    private void logDebug(String message) {
+        Log.d(DEBUG_TAG, message);
+    }
+}
+
+    private void paintEachSquare(Canvas canvas) {
+    for (int column = 0; column < GRID_WIDTH + 2; column++) {
+        for (int row = 0; row < GRID_HEIGHT + 2; row++) {
+            Square square = squares[column][row];
+            canvas.drawRect(square.leftEdge, square.topEdge, square.rightEdge, square.bottomEdge, square.paintStyle);
+
+            if (square.type == SquareType.Obstacle) {
+                if (square.targetIdentifier == null) {
+                    canvas.drawText(Integer.toString(square.ObstacleNumber), square.leftEdge + (squareDimension / 3.2f), square.topEdge + (squareDimension / 1.5f), lightPaint);
+                } else {
+                    Paint targetPaint = new Paint();
+                    targetPaint.setTextSize(20);
+                    targetPaint.setColor(Color.GREEN);
+                    targetPaint.setTextAlign(Paint.Align.CENTER);
+                    canvas.drawText(square.targetIdentifier, (square.leftEdge + square.rightEdge) / 2, square.bottomEdge + (square.topEdge - square.bottomEdge) / 4, targetPaint);
+                }
+
+                if (square.ObstacleDirection != null || square.ObstacleDirection == ExplorerDirection.STILL) {
+                    switch (square.ObstacleDirection) {
+                        case NORTH:
+                            canvas.drawRect(square.leftEdge + 2, square.topEdge + 1, square.rightEdge, square.bottomEdge - (squareDimension / 1.1f), routePaint);
+                            break;
+                        case SOUTH:
+                            canvas.drawRect(square.leftEdge + 2, square.topEdge + (squareDimension / 1f) - 2, square.rightEdge, square.bottomEdge - 1, routePaint);
+                            break;
+                        case WEST:
+                            canvas.drawRect(square.leftEdge + 1, square.topEdge + 2, square.rightEdge - (squareDimension / 1.1f), square.bottomEdge, routePaint);
+                            break;
+                        case EAST:
+                            canvas.drawRect(square.leftEdge + (squareDimension / 1f) - 2, square.topEdge, square.rightEdge - 1, square.bottomEdge, routePaint);
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    }
+
+
+    private Square getSquareAtPosition(int x, int y) {
+        return squares[x + 1][GRID_WIDTH - y];
+    }
+
+    public void refreshTargetID(int ObstacleNumber, String identifier) {
+        for (int col = 1; col <= GRID_WIDTH; col++)
+            for (int row = 1; row <= GRID_HEIGHT; row++)
+                if (squares[col][row].ObstacleNumber == ObstacleNumber) {
+                    squares[col][row].targetIdentifier = identifier;
+                }
+        invalidate();
+    }
+
+    private void sketchGridLines(Canvas canvas) {
+        for (int row = 0; row <= GRID_WIDTH; row++) {
+            Square start = squares[1][row];
+            Square end = squares[GRID_WIDTH][row];
+            canvas.drawLine(start.leftEdge, start.bottomEdge, end.rightEdge, end.bottomEdge, darkPaint);
+        }
+
+        for (int col = 1; col <= GRID_WIDTH + 1; col++) {
+            Square start = squares[col][1];
+            Square end = squares[col][GRID_HEIGHT];
+            canvas.drawLine(start.leftEdge, start.topEdge, end.leftEdge, end.bottomEdge, darkPaint);
+        }
+    }
+
+    private void sketchGridLabels(Canvas canvas) {
+        for (int col = 1; col <= GRID_WIDTH; col++) {
+            Square square = squares[col][GRID_WIDTH + 1];
+            String number = Integer.toString(col - 1);
+            canvas.drawText(number, square.leftEdge + (squareDimension / (col > 9 ? 5 : 3)), square.topEdge + (squareDimension / 2), numberPaint);
+        }
+
+        for (int row = 1; row <= GRID_HEIGHT; row++) {
+            Square square = squares[0][row];
+            int adjustedRow = GRID_HEIGHT - row;
+            String number = Integer.toString(adjustedRow);
+            canvas.drawText(number, square.leftEdge + (squareDimension / (adjustedRow > 9 ? 3 : 2)), square.topEdge + (squareDimension / 1.5f), numberPaint);
+        }
+    }
+
+    private void portrayExplorer(Canvas canvas) {
+        if (currentPosition[0] == -1 || currentPosition[1] == -1) {
+            return;
+        }
+
+        int[] squareIndexes = mapPositionToIndex(currentPosition[0], currentPosition[1]);
+        int indexCol = squareIndexes[0];
+        int indexRow = squareIndexes[1];
+
+        switch (currentDirection) {
+            case NORTH:
+                drawExplorerOutline(canvas, indexCol, indexRow, ExplorerDirection.NORTH);
+                break;
+            case SOUTH:
+                drawExplorerOutline(canvas, indexCol, indexRow, ExplorerDirection.SOUTH);
+                break;
+            case EAST:
+                drawExplorerOutline(canvas, indexCol, indexRow, ExplorerDirection.EAST);
+                break;
+            case WEST:
+                drawExplorerOutline(canvas, indexCol, indexRow, ExplorerDirection.WEST);
+                break;
+            default:
+                break; // Handle error or unknown direction
+        }
+    }
+
+
+    public ExplorerDirection getCurrentDirection() {
+        return currentDirection;
+    }
+
+    public boolean isAutoRefreshing() {
+        return automaticRefresh;
+    }
+
+    public boolean isOutdoorModeEnabled() {
+        return outdoorField;
+    }
+
+    public void setOutdoorMode(boolean isOutdoor) {
+        outdoorField = isOutdoor;
+    }
+
+    public void enableObstacleDirectionSetting(boolean status) {
+        directionSettingMode = status;
+    }
+
+    public void enableObstaclePlacement(boolean status) {
+        ObstacleSettingMode = status;
+    }
+
+    public void enableEntryPointSetting(boolean status) {
+        entryPointStatus = status;
+    }
+
+    private void initializeSquares() {
+        squares = new Square[GRID_WIDTH + 2][GRID_HEIGHT + 2];
+        squareDimension = getWidth() / (GRID_WIDTH + 2);
+
+        for (int col = 0; col < GRID_WIDTH + 2; col++) {
+            for (int row = 0; row < GRID_HEIGHT + 2; row++) {
+                float startX = col * squareDimension;
+                float startY = row * squareDimension;
+                squares[col][row] = new Square(startX, startY, startX + squareDimension, startY + squareDimension, SquareType.UNKNOWN);
+            }
+        }
+
+        // Set borders as non-navigable
+        for (int col = 0; col < GRID_WIDTH + 2; col++) {
+            squares[col][0].setSquareType(SquareType.EDGE);
+            squares[col][GRID_HEIGHT + 1].setSquareType(SquareType.EDGE);
+        }
+        for (int row = 0; row < GRID_HEIGHT + 2; row++) {
+            squares[0][row].setSquareType(SquareType.EDGE);
+            squares[GRID_WIDTH + 1][row].setSquareType(SquareType.EDGE);
+        }
+    }
+
+    public void updateExplorerPosition(int gridX, int gridY, ExplorerDirection direction) {
+        if (currentPosition[0] != -1 && currentPosition[1] != -1) {
+            // Clear previous explorer position
+            int[] prevIndexes = mapToGridIndex(currentPosition[0], currentPosition[1]);
+            clearPreviousExplorerPosition(prevIndexes);
+        }
+        currentDirection = direction;
+        currentPosition[0] = gridX;
+        currentPosition[1] = gridY;
+        markNewExplorerPosition(gridX, gridY);
+        invalidate();
+    }
+
+    public void setExplorerDirection(ExplorerDirection direction) {
+        currentDirection = direction;
+        invalidate();
+    }
+
+    private void updateExplorerStatusDisplay(int gridX, int gridY, ExplorerDirection direction) {
+        TextView gridXTextView = ((Activity) getContext()).findViewById(R.id.explorer_x_value);
+        TextView gridYTextView = ((Activity) getContext()).findViewById(R.id.explorer_y_value);
+        TextView directionTextView = ((Activity) getContext()).findViewById(R.id.explorer_direction_text);
+
+        gridXTextView.setText("X: " + (gridX - 1));
+        gridYTextView.setText("Y: " + (gridY - 1));
+        directionTextView.setText(direction.toString());
+    }
+
+
+    protected void placeObstacle(int gridX, int gridY) {
+        logDebug("Entering placeObstacle");
+        if (getSquareAtPosition(gridX, gridY).status == SquareStatus.Obstacle) {
+            return;
+        }
+        int[] ObstacleLocation = new int[]{gridX, gridY};
+        NavigationView.ObstaclePositions.add(ObstacleLocation);
+
+        Square ObstacleSquare = getSquareAtPosition(gridX, gridY);
+        ObstacleSquare.setSquareStatus(SquareStatus.Obstacle);
+        for (int i = 0; i < ObstacleNumbers.length; i++) {
+            if (ObstacleNumbers[i] != -1) {
+                if (ObstacleSquare.ObstacleID == -1) {
+                    ObstacleSquare.ObstacleID = ObstacleNumbers[i];
+                    ObstacleNumbers[i] = -1; // Mark as used
+                    break;
+                }
+            }
+        }
+        invalidate();
+        logDebug("Exiting placeObstacle");
+        refreshObstacleListView();
+    }
+
+    protected void clearObstacle(int gridX, int gridY) {
+        logDebug("Entering clearObstacle");
+        Square ObstacleSquare = getSquareAtPosition(gridX, gridY);
+        if (ObstacleSquare.status != SquareStatus.Obstacle) {
+            Log.i(DEBUG_TAG, "clearObstacle: No Obstacle at X:" + gridX + " Y: " + gridY);
+            return;
+        }
+        int ObstacleID = ObstacleSquare.ObstacleID;
+        ObstacleNumbers[ObstacleID - 1] = ObstacleID; // Restore Obstacle number
+        ObstacleSquare.reset(); // Reset the square to its default state
+        for (int i = 0; i < ObstaclePositions.size(); i++) {
+            int[] pos = ObstaclePositions.get(i);
+            if (pos[0] == gridX && pos[1] == gridY) {
+                ObstaclePositions.remove(i);
+                break;
+            }
+        }
+        invalidate();
+        refreshObstacleListView();
+        logDebug("Exiting clearObstacle");
+    }
+
+    private ArrayList<int[]> getObstacleLocations() {
+        return ObstaclePositions;
+    }
+
+    private void logDebug(String message) {
+        Log.d(DEBUG_TAG, message);
+    }
+
+    private String translateDirection(int directionCode) {
+        switch (directionCode) {
+            case 0: return "STILL";
+            case 1: return "NORTH";
+            case 2: return "SOUTH";
+            case 3: return "WEST";
+            case 4: return "EAST";
+            default: return "UNKNOWN";
+        }
+    }
+
+    private class Square {
+        float leftEdge, topEdge, rightEdge, bottomEdge;
+        Paint style;
+        SquareStatus status;
+        int ObstacleID = -1;
+        ExplorerDirection facing = ExplorerDirection.STILL;
+        String identifier = null;
+
+        Square(float left, float top, float right, float bottom, SquareStatus status) {
+            this.leftEdge = left;
+            this.topEdge = top;
+            this.rightEdge = right;
+            this.bottomEdge = bottom;
+            setSquareStatus(status);
+        }
+
+        void setSquareStatus(SquareStatus status) {
+            this.status = status;
+            switch (status) {
+                case Obstacle: this.style = ObstaclePaint; break;
+                case EXPLORER: this.style = explorerPaint; break;
+                case EDGE: this.style = boundaryPaint; break;
+                case UNKNOWN: this.style = unknownPaint; break;
+                default: logDebug("Unhandled square status: " + status); break;
+            }
+        }
+
+        void reset() {
+            this.ObstacleID = -1;
+            this.identifier = null;
+            this.facing = ExplorerDirection.STILL;
+            setSquareStatus(SquareStatus.UNKNOWN);
+        }
+    }
+
+       public void setObstacleDirection(ExplorerDirection direction) {
+           this.facing = direction;
+       }
+
+       public ExplorerDirection getObstacleDirection() {
+           return this.facing;
+       }
+
+       public void setIdentifier(int identifier) {
+           this.id = identifier;
+       }
+
+       public int getIdentifier() {
+           return this.id;
+       }
+
+       private enum SquareStatus {
+           UNKNOWN, Obstacle, EXPLORER, EDGE
+       }
+
+       public enum ExplorerDirection {
+           STILL, NORTH, SOUTH, WEST, EAST
+       }
+
+       @Override
+       public boolean onTouchEvent(MotionEvent event) {
+           logDebug("Handling onTouchEvent");
+           int gridX = (int) (event.getX() / squareDimension) - 1;
+           int gridY = GRID_HEIGHT - ((int) (event.getY() / squareDimension));
+
+           Square touchedSquare = null;
+           if (gridX >= 0 && gridY >= 0 && gridX <= GRID_WIDTH - 1 && gridY <= GRID_HEIGHT - 1) {
+               touchedSquare = getSquareAtPosition(gridX, gridY);
+           }
+
+           switch (event.getAction()) {
+               case MotionEvent.ACTION_DOWN:
+                   if (entryPointStatus && touchedSquare != null) {
+                       updateExplorerPosition(gridX, gridY, ExplorerDirection.NORTH);
+                       drawableExplorer = true;
+                       invalidate();
+                       deactivateRobotPlacement();
+                       return true;
+                   }
+                   if (ObstacleSettingMode && touchedSquare != null) {
+                       placeObstacle(gridX, gridY);
+                       return true;
+                   }
+                   if (directionSettingMode && touchedSquare != null) {
+                       promptDirectionSelection(touchedSquare);
+                       return true;
+                   }
+                   if (!ObstacleChosen && touchedSquare != null) {
+                       for (int[] pos : ObstaclePositions) {
+                           if (pos[0] == gridX && pos[1] == gridY) {
+                               chosenObstaclePosition = new int[]{gridX, gridY};
+                               ObstacleChosen = true;
+                               return true;
+                           }
+                       }
+                   }
+                   break;
+               case MotionEvent.ACTION_UP:
+                   if (ObstacleChosen) {
+                       ObstacleChosen = false;
+                       return true;
+                   }
+                   break;
+               case MotionEvent.ACTION_MOVE:
+                   if (ObstacleChosen) {
+                       moveObstacle(gridX, gridY);
+                       return true;
+                   }
+                   break;
+           }
+           logDebug("Exiting onTouchEvent");
+           return false;
+       }
+
+    private void initiateDirectionSelection(Square selectedSquare) {
+        boolean isExplorerSelected = (selectedSquare.status == SquareStatus.EXPLORER);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Explorer Direction");
+        builder.setSingleChoiceItems(explorerDirections, directionOption, (dialog, which) -> directionOption = which);
+        builder.setNeutralButton("Confirm", (dialog, which) -> {
+            ExplorerDirection direction = ExplorerDirection.STILL;
+            switch (directionOption) {
+                case 0: direction = ExplorerDirection.STILL; break;
+                case 1: direction = ExplorerDirection.NORTH; break;
+                case 2: direction = ExplorerDirection.SOUTH; break;
+                case 3: direction = ExplorerDirection.WEST; break;
+                case 4: direction = ExplorerDirection.EAST; break;
+            }
+
+            if (isExplorerSelected && direction == ExplorerDirection.STILL) {
+                setExplorerDirection(ExplorerDirection.NORTH);
+            } else if (isExplorerSelected) {
+                setExplorerDirection(direction);
+            } else {
+                selectedSquare.setObstacleDirection(direction);
+                refreshObstacleListView();
+            }
+            invalidate();
+            dialog.dismiss();
+        });
+
+        if (selectedSquare.status == SquareStatus.Obstacle || selectedSquare.status == SquareStatus.EXPLORER) {
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+    }
+
+    private void disableRobotPlacement() {
+        if (!entryPointStatus) {
+            return;
+        }
+        enableEntryPointSetting(false);
+
+        Button placeExplorerButton = ((Activity) getContext()).findViewById(R.id.btnPlaceExplorer);
+        Button setObstacleButton = ((Activity) getContext()).findViewById(R.id.btnSetObstacle);
+        Button selectDirectionButton = ((Activity) getContext()).findViewById(R.id.btnSelectDirection);
+        Button resetArenaButton = ((Activity) getContext()).findViewById(R.id.btnResetArena);
+        Button startFastestPathButton = ((Activity) getContext()).findViewById(R.id.btnStartFastestPath);
+        Button startRecognitionButton = ((Activity) getContext()).findViewById(R.id.btnStartRecognition);
+
+        setObstacleButton.setEnabled(true);
+        selectDirectionButton.setEnabled(true);
+        resetArenaButton.setEnabled(true);
+        startFastestPathButton.setEnabled(true);
+        startRecognitionButton.setEnabled(true);
+        placeExplorerButton.setText("Place Explorer");
+    }
+
+    public void clearNavigationMap() {
+        logDebug("Resetting navigation map");
+        TextView explorerStatusTextView = ((Activity) getContext()).findViewById(R.id.explorerStatusText);
+        explorerStatusTextView.setText("WAITING");
+
+        currentPosition = new int[]{-1, -1};
+        currentDirection = ExplorerDirection.STILL;
+        ObstaclePositions.clear();
+        hasDrawnMap = false;
+        drawableExplorer = false;
+        temporarySquares.clear();
+
+        ObstacleNumbers = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+        refreshObstacleListView();
+        invalidate();
+        logDebug("Navigation map reset");
+    }
+
+    private int explorerDirectionToInt(ExplorerDirection direction) {
+        switch (direction) {
+            case NORTH: return 0;
+            case EAST: return 2;
+            case SOUTH: return 4;
+            case WEST: return 6;
+            default: return -1;
+        }
+    }
+
+    public void broadcastArenaData() {
+        try {
+            JSONObject details = new JSONObject();
+            details.put("explorer_x", currentPosition[0]);
+            details.put("explorer_y", currentPosition[1]);
+            details.put("explorer_dir", explorerDirectionToInt(currentDirection));
+
+            JSONArray Obstacles = new JSONArray();
+            for (int[] location : ObstaclePositions) {
+                JSONObject Obstacle = new JSONObject();
+                Square ObstacleSquare = getSquareAtPosition(location[0], location[1]);
+                Obstacle.put("x", location[0]);
+                Obstacle.put("y", location[1]);
+                Obstacle.put("id", ObstacleSquare.ObstacleID);
+                Obstacle.put("d", explorerDirectionToInt(ObstacleSquare.facing));
+
+                Obstacles.put(Obstacle);
+            }
+            details.put("Obstacles", Obstacles);
+
+            Intent intent = new Intent("SEND_NAVIGATION_DATA");
+            intent.putExtra("data", details.toString());
+            LocalBroadcastManager.getInstance(getContext()).sendBroadcast(intent);
+        } catch (JSONException ex) {
+            Log.e(DEBUG_TAG, "Error broadcasting navigation data", ex);
+        }
+    }
+
+
+    public void broadcastObstacleUpdates() {
+        try {
+            JSONArray ObstaclesArray = new JSONArray();
+
+            for (int[] location : ObstaclePositions) {
+                JSONObject ObstacleDetail = new JSONObject();
+                Square ObstacleSquare = getSquareAtPosition(location[0], location[1]);
+                ObstacleDetail.put("x", location[0]);
+                ObstacleDetail.put("y", location[1]);
+                ObstacleDetail.put("id", ObstacleSquare.ObstacleID);
+                ObstacleDetail.put("direction", explorerDirectionToInt(ObstacleSquare.facing));
+
+                ObstaclesArray.put(ObstacleDetail);
+            }
+            JSONObject payload = new JSONObject();
+            payload.put("Obstacles", ObstaclesArray);
+            payload.put("mode", outdoorField ? "1" : "0");
+
+            JSONObject message = new JSONObject();
+            message.put("category", "Obstacles");
+            message.put("details", payload);
+
+            Intent broadcastIntent = new Intent("UPDATE_Obstacle_INFO");
+            broadcastIntent.putExtra("data", message.toString());
+            LocalBroadcastManager.getInstance(getContext()).sendBroadcast(broadcastIntent);
+        } catch (Exception e) {
+            Log.e(DEBUG_TAG, "broadcastObstacleUpdates: Error sending Obstacle update information", e);
+        }
+    }
+
+    private Square getSquareAtPosition(int gridX, int gridY) {
+        return squares[gridX + 1][GRID_HEIGHT - gridY];
+    }
+
+    private int[] mapToGridIndex(int gridX, int gridY) {
+        return new int[]{gridX + 1, GRID_HEIGHT - gridY};
+    }
+
+    public void refreshObstacleListView() {
+        try {
+            JSONArray ObstacleData = new JSONArray();
+            for (int[] location : ObstaclePositions) {
+                JSONObject ObstacleObj = new JSONObject();
+                Square square = getSquareAtPosition(location[0], location[1]);
+                ObstacleObj.put("number", square.ObstacleID);
+                ObstacleObj.put("x", location[0]);
+                ObstacleObj.put("y", location[1]);
+                ObstacleObj.put("direction", square.facing.toString());
+
+                ObstacleData.put(ObstacleObj);
+            }
+
+            Intent listUpdateIntent = new Intent("UPDATE_Obstacle_LIST_VIEW");
+            listUpdateIntent.putExtra("ObstacleData", ObstacleData.toString());
+            LocalBroadcastManager.getInstance(getContext()).sendBroadcast(listUpdateIntent);
+        } catch (Exception e) {
+            Log.e(DEBUG_TAG, "refreshObstacleListView: Error updating Obstacle list view", e);
+        }
+    }
+
+    public void clearAllTargetIdentifiers() {
+        for (int[] location : ObstaclePositions) {
+            Square ObstacleSquare = getSquareAtPosition(location[0], location[1]);
+            ObstacleSquare.identifier = null;
+        }
+        invalidate();
+    }
+
